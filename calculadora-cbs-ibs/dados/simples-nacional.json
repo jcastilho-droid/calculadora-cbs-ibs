@@ -1,0 +1,77 @@
+{
+  "fonte": "LC 123/2006, Anexos I a V, com a redação da LC 155/2016 (vigente desde 2018): faixas de receita bruta em 12 meses (RBT12), alíquota nominal, parcela a deduzir e percentual de repartição dos tributos. Conferido em 18/11/2026 com https://www.lefisc.com.br/sn/anexos2018/ e https://contaazul.com/blog/tabela-simples-nacional-completa/.",
+  "reforma": "LC 214/2025: a partir de 2027 a CBS substitui o PIS/Cofins dentro do DAS, e de 2029 a 2032 o IBS substitui o ICMS/ISS aos poucos; o total do DAS continua igual. O art. 41, §3º permite ao optante recolher CBS/IBS por fora, no regime regular (opção semestral a partir de 2027), com crédito integral ao cliente e direito a crédito nas compras. Dentro do DAS, o cliente só credita o valor de CBS/IBS pago no DAS.",
+  "issMaximo": 5,
+  "tributos": ["IRPJ", "CSLL", "Cofins", "PIS", "CPP", "IPI", "ICMS", "ISS"],
+  "limites": [180000, 360000, 720000, 1800000, 3600000, 4800000],
+  "sublimite": 3600000,
+  "anexos": {
+    "I": {
+      "nome": "Anexo I · Comércio",
+      "nominal": [4, 7.3, 9.5, 10.7, 14.3, 19],
+      "deduzir": [0, 5940, 13860, 22500, 87300, 378000],
+      "reparticao": [
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 12.74, "PIS": 2.76, "CPP": 41.5, "ICMS": 34 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 12.74, "PIS": 2.76, "CPP": 41.5, "ICMS": 34 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 12.74, "PIS": 2.76, "CPP": 42, "ICMS": 33.5 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 12.74, "PIS": 2.76, "CPP": 42, "ICMS": 33.5 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 12.74, "PIS": 2.76, "CPP": 42, "ICMS": 33.5 },
+        { "IRPJ": 13.5, "CSLL": 10, "Cofins": 28.27, "PIS": 6.13, "CPP": 42.1 }
+      ]
+    },
+    "II": {
+      "nome": "Anexo II · Indústria",
+      "nominal": [4.5, 7.8, 10, 11.2, 14.7, 30],
+      "deduzir": [0, 5940, 13860, 22500, 85500, 720000],
+      "reparticao": [
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 11.51, "PIS": 2.49, "CPP": 37.5, "IPI": 7.5, "ICMS": 32 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 11.51, "PIS": 2.49, "CPP": 37.5, "IPI": 7.5, "ICMS": 32 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 11.51, "PIS": 2.49, "CPP": 37.5, "IPI": 7.5, "ICMS": 32 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 11.51, "PIS": 2.49, "CPP": 37.5, "IPI": 7.5, "ICMS": 32 },
+        { "IRPJ": 5.5, "CSLL": 3.5, "Cofins": 11.51, "PIS": 2.49, "CPP": 37.5, "IPI": 7.5, "ICMS": 32 },
+        { "IRPJ": 8.5, "CSLL": 7.5, "Cofins": 20.96, "PIS": 4.54, "CPP": 23.5, "IPI": 35 }
+      ]
+    },
+    "III": {
+      "nome": "Anexo III · Serviços em geral",
+      "nominal": [6, 11.2, 13.5, 16, 21, 33],
+      "deduzir": [0, 9360, 17640, 35640, 125640, 648000],
+      "reparticao": [
+        { "IRPJ": 4, "CSLL": 3.5, "Cofins": 12.82, "PIS": 2.78, "CPP": 43.4, "ISS": 33.5 },
+        { "IRPJ": 4, "CSLL": 3.5, "Cofins": 14.05, "PIS": 3.05, "CPP": 43.4, "ISS": 32 },
+        { "IRPJ": 4, "CSLL": 3.5, "Cofins": 13.64, "PIS": 2.96, "CPP": 43.4, "ISS": 32.5 },
+        { "IRPJ": 4, "CSLL": 3.5, "Cofins": 13.64, "PIS": 2.96, "CPP": 43.4, "ISS": 32.5 },
+        { "IRPJ": 4, "CSLL": 3.5, "Cofins": 12.82, "PIS": 2.78, "CPP": 43.4, "ISS": 33.5 },
+        { "IRPJ": 35, "CSLL": 15, "Cofins": 16.03, "PIS": 3.47, "CPP": 30.5 }
+      ]
+    },
+    "IV": {
+      "nome": "Anexo IV · Serviços com CPP fora do DAS",
+      "nota": "No Anexo IV a CPP (20% sobre a folha) é paga fora do DAS e não entra nesta comparação.",
+      "nominal": [4.5, 9, 10.2, 14, 22, 33],
+      "deduzir": [0, 8100, 12420, 39780, 183780, 828000],
+      "reparticao": [
+        { "IRPJ": 18.8, "CSLL": 15.2, "Cofins": 17.67, "PIS": 3.83, "ISS": 44.5 },
+        { "IRPJ": 19.8, "CSLL": 15.2, "Cofins": 20.55, "PIS": 4.45, "ISS": 40 },
+        { "IRPJ": 20.8, "CSLL": 15.2, "Cofins": 19.73, "PIS": 4.27, "ISS": 40 },
+        { "IRPJ": 17.8, "CSLL": 19.2, "Cofins": 18.9, "PIS": 4.1, "ISS": 40 },
+        { "IRPJ": 18.8, "CSLL": 19.2, "Cofins": 18.08, "PIS": 3.92, "ISS": 40 },
+        { "IRPJ": 53.5, "CSLL": 21.5, "Cofins": 20.55, "PIS": 4.45 }
+      ]
+    },
+    "V": {
+      "nome": "Anexo V · Serviços intelectuais (Fator R abaixo de 28%)",
+      "nota": "Com Fator R (folha ÷ receita de 12 meses) de 28% ou mais, a atividade passa para o Anexo III.",
+      "nominal": [15.5, 18, 19.5, 20.5, 23, 30.5],
+      "deduzir": [0, 4500, 9900, 17100, 62100, 540000],
+      "reparticao": [
+        { "IRPJ": 25, "CSLL": 15, "Cofins": 14.1, "PIS": 3.05, "CPP": 28.85, "ISS": 14 },
+        { "IRPJ": 23, "CSLL": 15, "Cofins": 14.1, "PIS": 3.05, "CPP": 27.85, "ISS": 17 },
+        { "IRPJ": 24, "CSLL": 15, "Cofins": 14.92, "PIS": 3.23, "CPP": 23.85, "ISS": 19 },
+        { "IRPJ": 21, "CSLL": 15, "Cofins": 15.74, "PIS": 3.41, "CPP": 23.85, "ISS": 21 },
+        { "IRPJ": 23, "CSLL": 12.5, "Cofins": 14.1, "PIS": 3.05, "CPP": 23.85, "ISS": 23.5 },
+        { "IRPJ": 35, "CSLL": 15.5, "Cofins": 16.44, "PIS": 3.56, "CPP": 29.5 }
+      ]
+    }
+  }
+}

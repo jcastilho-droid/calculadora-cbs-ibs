@@ -1,0 +1,51 @@
+{
+  "observacao": "Alíquotas gerais de referência para a estimativa dos impostos atuais. Não consideram benefícios fiscais, substituição tributária, regimes especiais nem Simples Nacional. Confirme na legislação.",
+  "icmsInterno": {
+    "fonte": "Alíquotas internas gerais de 2026 conforme legislação estadual, compiladas em https://simplifique.contmatic.com.br/blogs/tabela-icms-2026 e https://focusnfe.com.br/blog/tabela-icms/ (conferidas em 18/11/2026). RJ inclui 2% do Fundo de Combate à Pobreza.",
+    "aliquotas": {
+      "AC": 19,
+      "AL": 20.5,
+      "AM": 20,
+      "AP": 18,
+      "BA": 20.5,
+      "CE": 20,
+      "DF": 20,
+      "ES": 17,
+      "GO": 19,
+      "MA": 23,
+      "MG": 18,
+      "MS": 17,
+      "MT": 17,
+      "PA": 19,
+      "PB": 20,
+      "PE": 20.5,
+      "PI": 22.5,
+      "PR": 19.5,
+      "RJ": 22,
+      "RN": 20,
+      "RO": 19.5,
+      "RR": 20,
+      "RS": 17,
+      "SC": 17,
+      "SE": 19,
+      "SP": 18,
+      "TO": 20
+    }
+  },
+  "pisCofins": {
+    "fonte": "Lei 10.637/2002 e Lei 10.833/2003 (não cumulativo: PIS 1,65% + Cofins 7,6%); Lei 9.715/1998 e Lei 9.718/1998 (cumulativo: PIS 0,65% + Cofins 3%). Base sem o ICMS destacado (STF, RE 574.706, Tema 69).",
+    "naoCumulativo": 9.25,
+    "cumulativo": 3.65
+  },
+  "iss": {
+    "fonte": "LC 116/2003 e LC 157/2016: alíquota mínima 2% e máxima 5%, definida por cada município.",
+    "padrao": 5,
+    "minimo": 2,
+    "maximo": 5
+  },
+  "reformaPlena": {
+    "fonte": "Estimativa: CBS de 11,3%, alíquota de referência calculada pelo TCU em 28/10/2026 para 2027 (https://portal.tcu.gov.br/imprensa/noticias/tcu-calcula-aliquota-de-referencia-de-113-para-novo-tributo-sobre-consumo), mais IBS de 17,7% da referência de 26,5% da LC 214/2025. As alíquotas definitivas ainda serão fixadas pelo Senado.",
+    "cbs": 11.3,
+    "ibs": 17.7
+  }
+}

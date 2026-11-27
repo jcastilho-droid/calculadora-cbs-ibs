@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora CBS/IBS</title>
+<meta name="description" content="Calculadora de CBS e IBS da Reforma Tributária, com as regras e tabelas oficiais da Receita Federal.">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --texto: #1c2430; --suave: #5b6675; --borda: #dde2e8;
+    --destaque: #0b6e4f; --destaque-claro: #e3f3ec; --erro: #b42318; --erro-claro: #fdecea; --aviso: #8a5a00; --aviso-claro: #fff4dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151b; --card: #1a2029; --texto: #e6eaf0; --suave: #9aa5b4; --borda: #2c3542;
+      --destaque: #3ecf96; --destaque-claro: #173a2e; --erro: #ff8a80; --erro-claro: #3a1d1b; --aviso: #ffcc66; --aviso-claro: #3a2f17;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--texto); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--suave); margin: 0 0 20px; }
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .grade > * { min-width: 0; }
+  @media (max-width: 760px) { .grade { grid-template-columns: minmax(0, 1fr); } .card { padding: 16px 14px; } }
+  .card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; padding: 20px; }
+  label { display: block; font-weight: 600; font-size: .85rem; margin: 14px 0 4px; }
+  label:first-child { margin-top: 0; }
+  .dica { font-weight: 400; color: var(--suave); }
+  input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg); color: var(--texto); font: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--destaque); outline-offset: -1px; }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .linha3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .abas { display: flex; gap: 6px; }
+  .abas button { flex: 1; padding: 8px; border: 1px solid var(--borda); background: var(--bg); color: var(--texto); border-radius: 8px; cursor: pointer; font: inherit; }
+  .abas button[aria-pressed="true"] { background: var(--destaque); color: var(--card); border-color: var(--destaque); font-weight: 600; }
+  .info { font-size: .85rem; color: var(--suave); margin-top: 4px; min-height: 1.2em; }
+  .info.ok { color: var(--destaque); }
+  .info.ruim { color: var(--erro); }
+  .caixa { border-radius: 8px; padding: 10px 12px; font-size: .88rem; margin-top: 12px; }
+  .caixa.aviso { background: var(--aviso-claro); color: var(--aviso); }
+  .caixa.erro { background: var(--erro-claro); color: var(--erro); }
+  button.calcular { margin-top: 18px; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: var(--destaque); color: var(--card); font: 600 1rem system-ui, sans-serif; cursor: pointer; }
+  button.calcular:disabled { opacity: .6; cursor: wait; }
+  .vazio { color: var(--suave); text-align: center; padding: 40px 10px; }
+  .total { background: var(--destaque-claro); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .total .rotulo { font-size: .85rem; color: var(--suave); }
+  .totais { margin-top: 12px; border-top: 1px solid var(--borda); padding-top: 6px; }
+  .tot-linha { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; padding: 6px 0; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  .tot-linha + .tot-linha { border-top: 1px dashed var(--borda); }
+  .tot-linha:first-child b { color: var(--destaque); }
+  .tot-linha small { display: block; font-size: .72rem; color: var(--suave); }
+  .tot-carga { color: var(--suave); font-size: .82rem; }
+  .total .valor { font-size: 1.8rem; font-weight: 700; color: var(--destaque); font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--borda); }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-size: .78rem; color: var(--suave); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  @media (max-width: 480px) { th, td { padding: 7px 3px; font-size: .82rem; } th { font-size: .66rem; letter-spacing: 0; } }
+  tfoot td { font-weight: 700; border-bottom: 0; }
+  details { margin-top: 14px; font-size: .85rem; }
+  summary { cursor: pointer; color: var(--suave); }
+  details p { margin: 6px 0; }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 10px; border-radius: 8px; font-size: .78rem; max-height: 320px; overflow: auto; }
+  .nao { color: var(--suave); }
+  .tag { display:inline-block; font-size:.72rem; padding:1px 6px; border-radius:6px; background: var(--aviso-claro); color: var(--aviso); margin-left:4px; }
+  footer a { color: inherit; }
+  #comparativo { margin-top: 18px; border-top: 1px solid var(--borda); padding-top: 14px; }
+  #compSn { margin-top: 10px; }
+  .comp-titulo { font-size: 1rem; font-weight: 700; display: block; }
+  .comp-det > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--borda); border-radius: 10px; background: var(--bg); }
+  .comp-det > summary::-webkit-details-marker { display: none; }
+  .comp-det > summary:hover { border-color: var(--destaque); }
+  .comp-resumo { grid-column: 1; font-size: .88rem; color: var(--texto); }
+  .comp-abrir { grid-column: 2; grid-row: 1 / span 2; font-size: .8rem; color: var(--destaque); font-weight: 600; white-space: nowrap; }
+  .comp-abrir::after { content: "Ver detalhes ▾"; }
+  .comp-det[open] .comp-abrir::after { content: "Recolher ▴"; }
+  .comp-det[open] > summary { margin-bottom: 8px; }
+  .comp-dif { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 6px; font-weight: 700; font-size: .8rem; background: var(--bg); }
+  .comp-dif.sobe { background: var(--aviso-claro); color: var(--aviso); }
+  .comp-dif.cai { background: var(--destaque-claro); color: var(--destaque); }
+  .comp-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
+  .comp-campos label { margin: 0 0 4px; font-size: .78rem; }
+  .comp-campos .dica { font-size: .72rem; color: var(--suave); margin-top: 2px; }
+  table.comp td:nth-child(2), table.comp th:nth-child(2) { white-space: nowrap; }
+  table.comp tr.grupo td { font-weight: 600; }
+  table.comp tr.sub td { font-size: .82rem; color: var(--suave); padding-top: 3px; padding-bottom: 3px; border-bottom: 0; }
+  table.comp tr.sub td:first-child { padding-left: 16px; }
+  .caixa.ok-caixa { background: var(--destaque-claro); color: var(--destaque); }
+  .chave { display: flex; align-items: center; gap: 10px; font-weight: 400; font-size: .88rem; margin: 10px 0 8px; cursor: pointer; user-select: none; }
+  .chave input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .chave .trilho { position: relative; flex: none; width: 38px; height: 22px; border-radius: 11px; background: var(--borda); transition: background .15s; }
+  .chave .trilho::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--card); transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .chave input:checked + .trilho { background: var(--destaque); }
+  .chave input:checked + .trilho::after { transform: translateX(16px); }
+  .chave input:focus-visible + .trilho { outline: 2px solid var(--destaque); outline-offset: 2px; }
+  .chave input:disabled ~ span { opacity: .55; }
+  .chave:has(input:disabled) { cursor: not-allowed; }
+  .contagem { font-size: .8rem; color: var(--suave); margin-top: 4px; }
+  .rotulo-ajuda { display: flex; align-items: center; gap: 6px; }
+  .ajuda { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--destaque); background: var(--card); color: var(--destaque); font: 700 .8rem system-ui, sans-serif; cursor: pointer; line-height: 1; padding: 0; flex: none; }
+  .ajuda:hover, .ajuda:focus-visible { background: var(--destaque); color: var(--card); }
+  .painel { position: fixed; top: 0; right: 0; height: 100%; width: min(380px, 100%); background: var(--card); border-left: 1px solid var(--borda); box-shadow: -8px 0 24px rgba(0,0,0,.12); padding: 20px; overflow-y: auto; transform: translateX(100%); transition: transform .2s ease; z-index: 10; }
+  .painel.aberto { transform: translateX(0); }
+  .painel h2 { font-size: 1.1rem; margin: 0 32px 12px 0; }
+  .painel h3 { font-size: .95rem; margin: 18px 0 6px; color: var(--destaque); }
+  .painel p, .painel li { font-size: .9rem; margin: 6px 0; }
+  .rotulo-codigo { justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
+  .rotulo-codigo label { margin: 0; }
+  .resultados .tag-est { color: var(--destaque); font-weight: 700; font-size: .75rem; display: block; margin-top: 2px; }
+  .resultados .ruim { color: var(--erro); }
+  .link-busca { border: 0; background: none; color: var(--destaque); font: 600 .82rem system-ui, sans-serif; cursor: pointer; padding: 2px 0; text-decoration: underline; text-underline-offset: 2px; }
+  .busca-abas { display: flex; gap: 6px; margin: 10px 0; }
+  .busca-abas button { flex: 1; padding: 7px; border: 1px solid var(--borda); background: var(--bg); color: var(--texto); border-radius: 8px; cursor: pointer; font: inherit; font-size: .85rem; }
+  .busca-abas button[aria-pressed="true"] { background: var(--destaque); color: var(--card); border-color: var(--destaque); font-weight: 600; }
+  .resultados { list-style: none; padding: 0 !important; margin: 10px 0 0 !important; }
+  .resultados li { margin: 0 0 6px; }
+  .resultados button { width: 100%; text-align: left; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg); color: var(--texto); padding: 8px 10px; cursor: pointer; font: inherit; font-size: .85rem; line-height: 1.35; }
+  .resultados button:hover, .resultados button:focus-visible { border-color: var(--destaque); outline: none; }
+  .resultados .cod { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; color: var(--destaque); display: block; }
+  .resultados .cam { color: var(--suave); font-size: .78rem; display: block; margin-top: 2px; }
+  .resultados mark { background: var(--destaque-claro); color: inherit; border-radius: 3px; }
+  .painel ul { padding-left: 18px; margin: 6px 0; }
+  .painel code { background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  .painel .fechar { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg); color: var(--texto); font-size: 1.1rem; cursor: pointer; }
+  .fundo { position: fixed; inset: 0; background: rgba(0,0,0,.25); z-index: 9; }
+  @media (prefers-reduced-motion: reduce) { .painel { transition: none; } }
+  .conceitos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 20px; }
+  .conceito { display: flex; gap: 12px; align-items: center; text-align: left; padding: 14px 16px; border: 1px solid var(--borda); border-radius: 12px; background: var(--card); color: var(--texto); font: inherit; cursor: pointer; }
+  .conceito:hover, .conceito:focus-visible { border-color: var(--destaque); }
+  .conceito .q { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--destaque); color: var(--destaque); display: grid; place-items: center; font-weight: 700; }
+  .conceito:hover .q { background: var(--destaque); color: var(--card); }
+  .conceito small { display: block; font-size: .78rem; color: var(--suave); margin-top: 2px; }
+  .linha-tempo { list-style: none; padding: 0; margin: 8px 0; }
+  .linha-tempo li { border-left: 3px solid var(--destaque); padding: 2px 0 10px 12px; margin: 0; }
+  .linha-tempo li b:first-child { display: block; color: var(--destaque); }
+  .exemplo td, .exemplo th { font-size: .8rem; padding: 5px 4px; }
+  .sub-rotulo { font-size: .78rem; font-weight: 600; color: var(--suave); margin: 10px 0 4px; }
+  .selecionada { margin-top: 8px; padding: 8px 10px; border-left: 3px solid var(--destaque); background: var(--destaque-claro); border-radius: 6px; font-size: .88rem; }
+  .selecionada:empty, #infoCodigo:empty { display: none; }
+  .selecionada span { display: block; font-size: .72rem; color: var(--suave); text-transform: uppercase; letter-spacing: .03em; }
+  .selecionada b { color: var(--destaque); margin-right: 4px; }
+  footer p { margin: 2px 0; }
+  /* --- resultado: achado, linha do tempo, blocos --- */
+  .res-rotulo { font-size: .85rem; color: var(--suave); }
+  .achado { font-size: 1.25rem; line-height: 1.25; margin: 4px 0 2px; text-wrap: balance; }
+  .achado b { color: var(--destaque); }
+  .tempo { margin: 14px 0 4px; }
+  .colunas { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; align-items: end; height: 190px; padding-top: 20px; border-bottom: 1px solid var(--borda); }
+  .col { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; border: 0; padding: 0; background: none; font: inherit; color: inherit; border-radius: 6px 6px 0 0; }
+  .col .pct { position: absolute; left: 50%; transform: translateX(-50%); font-size: .72rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; margin-bottom: 3px; }
+  .col .seg { display: block; width: 100%; transition: height .4s ease; }
+  .col .seg:first-of-type { border-radius: 5px 5px 0 0; }
+  .seg.atual { background: #9aa4b2; } .seg.cbs { background: var(--destaque); } .seg.ibs { background: #6cc6a2; }
+  .col.sel .pct { color: var(--destaque); }
+  .col.ativo { background: var(--destaque-claro); }
+  .col:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+  .anos { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; font-size: .74rem; color: var(--suave); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .anos .sel { color: var(--destaque); font-weight: 700; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .76rem; color: var(--suave); margin: 8px 0 0; align-items: center; }
+  .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .marco { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: .86rem; }
+  .marco b { display: block; }
+  .marco .valores { color: var(--suave); font-size: .8rem; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .sn-linha { margin-top: 10px; font-size: .84rem; color: var(--suave); }
+  .sn-linha:empty { display: none; }
+  .bloco { margin-top: 18px; border-top: 1px solid var(--borda); padding-top: 14px; }
+  .bloco-tit { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+  .selo { font-size: .72rem; font-weight: 600; padding: 1px 8px; border-radius: 6px; }
+  .selo.oficial { background: var(--destaque-claro); color: var(--destaque); }
+  .selo.est { background: var(--aviso-claro); color: var(--aviso); }
+  .bloco #comparativo { margin-top: 6px; border-top: 0; padding-top: 0; }
+  .scroll { overflow-x: auto; }
+  .scroll td:not(:first-child), .scroll th:not(:first-child) { white-space: nowrap; }
+  .scroll table { min-width: 100%; }
+  .acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+  .btn-sec { padding: 8px 14px; border: 1px solid var(--destaque); border-radius: 8px; background: var(--card); color: var(--destaque); font: 600 .88rem system-ui, sans-serif; cursor: pointer; min-height: 40px; }
+  .btn-sec:hover { background: var(--destaque-claro); }
+  .acoes .info { margin: 0; }
+  .desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .desc.aberta { display: block; }
+  .ver-mais { border: 0; background: none; padding: 2px 0 0; color: var(--destaque); font: 600 .8rem system-ui, sans-serif; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .linha.local { grid-template-columns: 96px minmax(0, 1fr); }
+  #historico { margin-top: 20px; }
+  #historico h2 { font-size: 1rem; margin: 0 0 8px; }
+  .hist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .hist button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; text-align: left; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg); color: var(--texto); padding: 8px 10px; cursor: pointer; font: inherit; font-size: .85rem; }
+  .hist button:hover, .hist button:focus-visible { border-color: var(--destaque); outline: none; }
+  .hist small { color: var(--suave); font-size: .76rem; grid-column: 1 / -1; }
+  .hist b { font-variant-numeric: tabular-nums; }
+  @media (max-width: 480px) { .colunas, .anos { gap: 3px; } .col .pct { font-size: .62rem; } .anos { font-size: .66rem; } .achado { font-size: 1.1rem; } }
+  @media (prefers-reduced-motion: reduce) { .col .seg { transition: none; } }
+  footer { margin-top: 24px; font-size: .8rem; color: var(--suave); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Calculadora CBS/IBS</h1>
+  <p class="sub">Roda inteira no seu navegador, com as tabelas oficiais da calculadora da Receita Federal.</p>
+
+  <div class="grade">
+    <form class="card" id="form" autocomplete="off">
+      <div class="rotulo-ajuda"><label>O que está sendo vendido?</label><button type="button" class="ajuda" data-ajuda="codigo" aria-label="O que é NCM e NBS?" title="O que é NCM e NBS?">?</button></div>
+      <div class="abas" role="group">
+        <button type="button" data-tipo="ncm" aria-pressed="true">Produtos - NCM</button>
+        <button type="button" data-tipo="nbs" aria-pressed="false">Serviços - NBS</button>
+      </div>
+
+      <div class="rotulo-ajuda rotulo-codigo"><label for="codigo"><span id="rotuloCodigo">Código NCM</span> <span class="dica">(só números)</span></label><button type="button" class="link-busca" id="abrirBuscaNome">Buscar por nome</button></div>
+      <input id="codigo" inputmode="numeric" placeholder="ex.: 84713012" required>
+      <div class="selecionada" id="selCodigo"></div>
+      <div class="info" id="infoCodigo"></div>
+
+      <div class="rotulo-ajuda rotulo-codigo"><span class="rotulo-ajuda"><label for="classTrib">Classificação tributária</label><button type="button" class="ajuda" data-ajuda="classificacao" aria-label="O que é a classificação tributária?" title="O que é a classificação tributária?">?</button></span><button type="button" class="link-busca" id="abrirBuscaClasse">Buscar por nome</button></div>
+      <label class="chave"><input type="checkbox" id="soValidas" role="switch"><span class="trilho" aria-hidden="true"></span><span id="rotuloValidas">Mostrar só as que valem para este código</span></label>
+      <label class="sub-rotulo" for="cst">Situação tributária (CST)</label>
+      <select id="cst"></select>
+      <label class="sub-rotulo" for="classTrib">Classificação</label>
+      <select id="classTrib" required></select>
+      <div class="selecionada" id="selClass"></div>
+      <div class="caixa aviso" id="avisoSetor" hidden></div>
+      <div class="contagem" id="contagem"></div>
+      <div class="info" id="infoClass"></div>
+
+      <div class="linha">
+        <div>
+          <label for="valor">Valor do item (R$)</label>
+          <input id="valor" inputmode="decimal" placeholder="1.000,00" required>
+          <div class="dica" style="font-size:.74rem;margin-top:2px">vírgula para os centavos</div>
+        </div>
+        <div>
+          <label for="data">Data da operação</label>
+          <input id="data" type="date" required>
+        </div>
+      </div>
+
+      <div class="rotulo-ajuda rotulo-codigo"><label>Local da operação</label><button type="button" class="link-busca" id="abrirBuscaMunicipio">Buscar por nome</button></div>
+      <div class="linha local">
+        <div>
+          <label for="uf">UF</label>
+          <select id="uf" required></select>
+        </div>
+        <div>
+          <label for="municipio">Município</label>
+          <select id="municipio" required></select>
+        </div>
+      </div>
+      <div class="selecionada" id="selLocal"></div>
+
+      <div id="blocoAliquotas" hidden>
+        <div class="caixa aviso">Ainda não há alíquota oficial de referência para essa data. A CBS vem preenchida com <b>11,3%, estimativa do TCU</b> para 2027, e o IBS com 0,1% (0,05% estadual + 0,05% municipal) da transição de 2027 e 2028. Ajuste se quiser simular outros valores (em %).</div>
+        <div class="linha3">
+          <div><label for="aCbs">CBS</label><input id="aCbs" inputmode="decimal" value="11,3"></div>
+          <div><label for="aUf">IBS estadual</label><input id="aUf" inputmode="decimal" value="0,05"></div>
+          <div><label for="aMun">IBS municipal</label><input id="aMun" inputmode="decimal" value="0,05"></div>
+        </div>
+      </div>
+
+      <button class="calcular" id="btn" type="submit" disabled>Carregando tabelas…</button>
+      <div id="erroForm"></div>
+    </form>
+
+    <section class="card" id="resultado" aria-live="polite">
+      <div class="vazio">Preencha os dados e clique em <b>Calcular</b>.</div>
+    </section>
+  </div>
+
+  <section class="card" id="historico" hidden>
+    <h2>Últimas simulações</h2>
+    <ul class="hist" id="histLista"></ul>
+  </section>
+
+  <nav class="conceitos" aria-label="Entenda a reforma">
+    <button type="button" class="conceito" data-ajuda="transicao"><span class="q">?</span><span><b>Convivência entre os impostos</b><small>o que muda de 2026 a 2033</small></span></button>
+    <button type="button" class="conceito" data-ajuda="credito"><span class="q">?</span><span><b>Como funciona o crédito</b><small>como o cliente vê o imposto e recebe o crédito</small></span></button>
+  </nav>
+
+  <footer>
+    <p>Calculadora não substitui orientação contábil.</p>
+    <p>Regras e tabelas da <a href="https://github.com/ReceitaFederal/calculadora-rtc-regime-regular">calculadora oficial da Receita Federal</a>.</p>
+    <p>Desenvolvido por Jonathan Castilho.</p>
+    <p id="atualizacao"></p>
+  </footer>
+</main>
+
+<div class="fundo" id="fundo" hidden></div>
+<aside class="painel" id="painel" role="dialog" aria-modal="true" aria-labelledby="painelTitulo" aria-hidden="true">
+  <button type="button" class="fechar" id="fecharPainel" aria-label="Fechar">×</button>
+  <div id="ajuda-codigo" hidden>
+    <h2 id="painelTitulo">Produtos (NCM) e Serviços (NBS)</h2>
+    <p>Todo item vendido é identificado por um código oficial. É ele que diz à calculadora o que está sendo vendido.</p>
+    <h3>Produtos - NCM</h3>
+    <p>A <b>NCM</b> (Nomenclatura Comum do Mercosul) é o código de <b>8 dígitos</b> das mercadorias. É o mesmo código que já aparece na nota fiscal de produto (NF-e e NFC-e).</p>
+    <ul>
+      <li><code>10063021</code> arroz polido</li>
+      <li><code>84713012</code> notebook</li>
+    </ul>
+    <h3>Serviços - NBS</h3>
+    <p>A <b>NBS</b> (Nomenclatura Brasileira de Serviços) é o código de <b>9 dígitos</b> dos serviços e dos bens intangíveis. Com a reforma, ela passa a ser obrigatória na nota fiscal de serviço (NFS-e).</p>
+    <ul>
+      <li><code>122011200</code> educação (pré-escola)</li>
+    </ul>
+    <h3>Por que isso importa</h3>
+    <p>A calculadora cruza o código com a <b>classificação tributária</b>. Muitas reduções só valem para itens listados nos anexos da LC 214/2025. Por exemplo, a redução de 100% da cesta básica vale só para os alimentos do Anexo I. Se o código não estiver no anexo, a página avisa.</p>
+    <p>Não sabe o código? Ele costuma estar no cadastro do produto no seu sistema ou na nota do fornecedor.</p>
+  </div>
+  <div id="ajuda-busca" hidden>
+    <h2>Buscar produto ou serviço por nome</h2>
+    <p>Digite o nome do que está sendo vendido. Clique no resultado para usar o código na calculadora.</p>
+    <div class="busca-abas" role="group">
+      <button type="button" data-busca="ncm" aria-pressed="true">Produtos - NCM</button>
+      <button type="button" data-busca="nbs" aria-pressed="false">Serviços - NBS</button>
+    </div>
+    <input id="buscaNome" type="search" placeholder="ex.: arroz, notebook, consulta médica" autocomplete="off">
+    <div class="contagem" id="buscaContagem"></div>
+    <ul class="resultados" id="buscaResultados"></ul>
+  </div>
+  <div id="ajuda-municipio" hidden>
+    <h2>Buscar município pelo nome</h2>
+    <p>Digite o nome da cidade. Ao clicar no resultado, a UF e o município são preenchidos na calculadora.</p>
+    <input id="buscaMunicipio" type="search" placeholder="ex.: Campinas, Porto Alegre, São José" autocomplete="off">
+    <div class="contagem" id="municipioContagem"></div>
+    <ul class="resultados" id="municipioResultados"></ul>
+  </div>
+  <div id="ajuda-classe" hidden>
+    <h2>Buscar classificação tributária pelo nome</h2>
+    <p>Digite o setor ou a situação, por exemplo "saúde", "alimentação", "exportação" ou "isenção". Ao clicar no resultado, a classificação é escolhida na calculadora.</p>
+    <input id="buscaClasse" type="search" placeholder="ex.: saúde, alimentação, transporte" autocomplete="off">
+    <div class="contagem" id="classeContagem"></div>
+    <ul class="resultados" id="classeResultados"></ul>
+  </div>
+  <div id="ajuda-credito" hidden>
+    <h2>Como funciona o crédito na reforma</h2>
+    <p>A CBS e o IBS são <b>não cumulativos</b>: cada empresa paga o tributo da sua venda e desconta o que já foi pago nas compras. No fim, o imposto total corresponde só ao preço pago pelo consumidor final.</p>
+    <h3>Exemplo com 26,5%</h3>
+    <table class="exemplo">
+      <thead><tr><th>Etapa</th><th>Venda</th><th>CBS/IBS</th><th>Crédito</th><th>Paga</th></tr></thead>
+      <tbody>
+        <tr><td>Fornecedor</td><td>100</td><td>26,50</td><td>0</td><td>26,50</td></tr>
+        <tr><td>Indústria</td><td>300</td><td>79,50</td><td>26,50</td><td>53,00</td></tr>
+        <tr><td>Loja</td><td>500</td><td>132,50</td><td>79,50</td><td>53,00</td></tr>
+      </tbody>
+      <tfoot><tr><td>Total</td><td></td><td></td><td></td><td>132,50</td></tr></tfoot>
+    </table>
+    <p>Somando as três etapas, o governo recebe R$ 132,50, exatamente 26,5% dos R$ 500 pagos pelo consumidor.</p>
+    <h3>Como o cliente vê o imposto</h3>
+    <ul>
+      <li><b>Na nota fiscal</b> (NF-e, NFC-e e NFS-e), cada item mostra o valor da operação e, em campos separados, a <b>CBS</b>, o <b>IBS estadual</b> e o <b>IBS municipal</b>, com a base, a alíquota e o valor. Hoje o ICMS e o PIS/Cofins ficam embutidos no preço. Na reforma, o tributo é calculado "por fora" e aparece destacado.</li>
+      <li><b>Empresa que compra</b> vê na nota de entrada exatamente quanto de CBS/IBS pagou. É esse valor que vira crédito.</li>
+      <li><b>Consumidor final</b> vê no cupom ou na nota quanto do valor pago é CBS e IBS. Ele não usa esse valor como crédito. A informação serve para transparência.</li>
+      <li><b>Compra do Simples:</b> a nota mostra só a CBS/IBS paga dentro do DAS, que é o que o cliente pode creditar.</li>
+    </ul>
+    <h3>Como a empresa recebe o crédito, passo a passo</h3>
+    <ol>
+      <li><b>Compra:</b> a loja compra R$ 300 da indústria. A nota destaca R$ 79,50 de CBS/IBS, e a loja paga R$ 379,50.</li>
+      <li><b>Pagamento:</b> se a loja paga por Pix, boleto ou cartão com split payment, os R$ 79,50 vão direto para o governo, e a indústria recebe R$ 300. Sem split, a indústria recolhe o tributo na apuração dela.</li>
+      <li><b>Crédito liberado:</b> quando o tributo da compra é pago, o crédito de R$ 79,50 aparece na apuração da loja. Se o fornecedor não pagar, o crédito fica pendente.</li>
+      <li><b>Apuração assistida:</b> todo mês a Receita Federal (CBS) e o Comitê Gestor do IBS montam a apuração pelas notas emitidas e recebidas, com débitos das vendas e créditos das compras já preenchidos. A empresa confere, ajusta se precisar e confirma.</li>
+      <li><b>Acerto:</b> a loja vende por R$ 500 e deve R$ 132,50. Com o crédito de R$ 79,50, paga só R$ 53.</li>
+      <li><b>Sobrou crédito?</b> Pode ser usado nos meses seguintes ou ressarcido em dinheiro, nos prazos da lei. Exportadores e quem investe muito costumam ficar com saldo a favor.</li>
+    </ol>
+    <h3>E o consumidor final?</h3>
+    <p>Pessoa física não tem crédito. O que existe é o <b>cashback</b>: famílias de baixa renda inscritas no CadÚnico recebem de volta parte da CBS/IBS paga, principalmente em contas de luz, água, gás e telefone.</p>
+    <h3>O que muda em relação a hoje</h3>
+    <ul>
+      <li><b>Crédito amplo (financeiro):</b> dá crédito tudo o que a empresa compra para a atividade, como energia, aluguel, serviços, material de escritório e bens do ativo. Hoje o ICMS e o PIS/Cofins limitam muito o que gera crédito.</li>
+      <li><b>Exceções:</b> bens considerados de uso pessoal, como joias, obras de arte, bebidas alcoólicas, cigarros, armas e itens de lazer, não geram crédito, salvo quando fazem parte da atividade da empresa.</li>
+      <li><b>Crédito só do que foi pago:</b> o crédito depende de o tributo da compra ter sido efetivamente recolhido.</li>
+      <li><b>Isenção e imunidade</b> em regra anulam o crédito das compras ligadas a essas vendas. A <b>alíquota reduzida</b> mantém o crédito.</li>
+      <li><b>Saldo a favor</b> pode ser compensado nos meses seguintes ou ressarcido.</li>
+    </ul>
+    <h3>Split payment</h3>
+    <p>No pagamento eletrônico (Pix, cartão, boleto), a parte da CBS/IBS pode ser separada na hora e enviada direto ao governo. O vendedor recebe o valor líquido. É assim que o sistema confere que o tributo foi pago e libera o crédito para quem comprou. A implantação é gradual.</p>
+    <h3>E o Simples Nacional?</h3>
+    <p>Quem compra de empresa do Simples credita só a CBS/IBS paga dentro do DAS, que costuma ser bem menor. Se a empresa do Simples optar por recolher a CBS/IBS por fora, o cliente credita o valor cheio. Veja o comparativo do Simples no resultado.</p>
+    <p class="info">Base: LC 214/2025, capítulos da não cumulatividade, do uso e consumo pessoal, do split payment, da apuração e da devolução personalizada (cashback). Explicação simplificada.</p>
+  </div>
+  <div id="ajuda-transicao" hidden>
+    <h2>Convivência entre os impostos (2026 a 2033)</h2>
+    <p>A troca não acontece de uma vez. Durante a transição, os impostos de hoje e os novos convivem, e a calculadora mostra o ano da data que você escolher.</p>
+    <ul class="linha-tempo">
+      <li><b>2026 · ano de teste</b>CBS de 0,9% e IBS de 0,1% aparecem na nota fiscal, mas podem ser compensados com PIS/Cofins. Para quem cumpre as obrigações da nota, não há custo extra. O Simples Nacional fica de fora. Todos os impostos de hoje continuam.</li>
+      <li><b>2027 · entra a CBS</b>PIS e Cofins acabam e a CBS passa a valer integralmente. O IPI vai a zero, exceto para produtos com industrialização incentivada na Zona Franca de Manaus. Começa o Imposto Seletivo (cigarros, bebidas alcoólicas e açucaradas, veículos, minérios e outros). O IBS segue simbólico em 0,1%.</li>
+      <li><b>2028</b>Igual a 2027.</li>
+      <li><b>2029 a 2032 · troca gradual do ICMS e do ISS</b>As alíquotas de ICMS e ISS caem para 90%, 80%, 70% e 60% das atuais, e o IBS sobe na mesma proporção. Os benefícios fiscais de ICMS também diminuem.</li>
+      <li><b>2033 · sistema novo completo</b>ICMS e ISS deixam de existir. Ficam só a CBS (federal), o IBS (estados e municípios) e o Imposto Seletivo.</li>
+    </ul>
+    <h3>Na prática</h3>
+    <ul>
+      <li>Até 2032, uma venda pode ter ICMS ou ISS e CBS/IBS ao mesmo tempo. É por isso que o comparativo usa as alíquotas plenas estimadas (29%: CBS de 11,3% estimada pelo TCU + IBS de 17,7%) para comparar com o sistema de hoje.</li>
+      <li>A partir de 2027, a CBS/IBS deixa de entrar na base do ICMS e do ISS, e vice-versa: cada tributo é calculado "por fora".</li>
+      <li>A alíquota final de referência ainda vai ser fixada pelo Senado. A LC 214/2025 prevê uma referência de 26,5% somando CBS e IBS, mas o TCU calculou a CBS de 2027 em 11,3%, o que leva a soma para perto de 29%. Os valores da calculadora para os anos futuros são estimativas.</li>
+    </ul>
+    <p class="info">Base: Emenda Constitucional 132/2023 e LC 214/2025 (arts. 343 a 348 e disposições de transição). Explicação simplificada.</p>
+  </div>
+  <div id="ajuda-classificacao" hidden>
+    <h2>Classificação tributária</h2>
+    <p>É um código de <b>6 dígitos</b> criado pela reforma. Ele diz <b>qual regra</b> se aplica à operação: tributação integral, alíquota reduzida, isenção, diferimento etc.</p>
+    <p>Os 3 primeiros dígitos são o <b>CST</b> (situação tributária):</p>
+    <ul>
+      <li><code>000</code> tributação integral</li>
+      <li><code>200</code> alíquota reduzida (ex.: <code>200003</code> alimentos do Anexo I, <code>200028</code> educação)</li>
+      <li><code>400</code> e <code>410</code> isenção, imunidade e não incidência</li>
+      <li><code>510</code> diferimento</li>
+    </ul>
+    <p><b>Buscar por nome:</b> abre a busca ao lado. Digite partes do nome em qualquer ordem, por exemplo "serviço saúde" ou "alimentação humana", e clique na classificação para escolher.</p>
+    <p><b>Campo CST:</b> escolha primeiro a situação tributária (por exemplo 200, alíquota reduzida) para a lista de classificações mostrar só as daquele grupo. "Todos os CST" mostra todas.</p>
+    <p><b>Chave "Mostrar só as que valem":</b> depois de digitar o NCM ou NBS completo, ligue a chave para ver só os CST e as classificações que podem ser usados com aquele código.</p>
+    <p><b>Estrelas (★):</b> com o código digitado, as sugestões sobem para o topo da lista. "Benefício da lei" são as classificações do anexo da LC 214/2025 que inclui o seu código, como a cesta básica para o arroz. "Padrão, mais comum" é a <code>000001</code>, tributação integral, usada quando o item não tem benefício. É o caso de um notebook.</p>
+    <p>Na dúvida, comece por <code>000001</code> (tributação integral). Depois use a busca para procurar o seu setor, por exemplo "saúde", "alimentação" ou "transporte".</p>
+    <p>Itens marcados com "(não calculada)" usam regras especiais que esta página ainda não calcula.</p>
+  </div>
+</aside>
+
+<script src="calc.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const brl = (n) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const pct = (n) => Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) + '%';
+const num = (s) => Number(String(s).trim().replace(/\./g, '').replace(',', '.'));
+const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hoje = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+
+const dados = {};
+let classes = [];
+let tipo = 'ncm';
+
+async function carregar() {
+  const nomes = ['meta', 'classes', 'ncm', 'nbs', 'ufs', 'impostos-atuais'];
+  const jsons = await Promise.all(nomes.map((n) => fetch(`dados/${n}.json`).then((r) => { if (!r.ok) throw new Error(n); return r.json(); })));
+  nomes.forEach((n, i) => { dados[n] = jsons[i]; });
+  // TIPI (IPI por NCM) é opcional: se não carregar, o campo de IPI fica manual
+  dados.tipi = await fetch('dados/tipi.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  dados.simples = await fetch('dados/simples-nacional.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  classes = dados.classes;
+  const br = (d) => (d ? d.split('-').reverse().join('/') : '—');
+  const m = dados.meta;
+  // Data e hora da última execução do robô diário (que confere e atualiza as tabelas)
+  $('atualizacao').textContent = `Regras vigentes atualizadas em ${br(m.ultimaVerificacao || m.dataAtualizacao || m.dataExportacao)}${m.horaVerificacao ? ` às ${m.horaVerificacao}` : ''}`;
+}
+
+function preencherUfs() {
+  $('uf').innerHTML = Object.entries(dados.ufs).map(([s, u]) => `<option value="${s}" title="${esc(u.nome)}">${s}</option>`).join('');
+  $('uf').value = 'SP';
+  preencherMunicipios();
+}
+function preencherMunicipios() {
+  const uf = dados.ufs[$('uf').value];
+  $('municipio').innerHTML = uf.municipios.map(([c, n]) => `<option value="${c}">${esc(n)}</option>`).join('');
+  const capitais = { SP: 3550308, RJ: 3304557, MG: 3106200, RS: 4314902, PR: 4106902, SC: 4205407, BA: 2927408, DF: 5300108 };
+  if (capitais[$('uf').value]) $('municipio').value = capitais[$('uf').value];
+  mostrarLocal();
+}
+function mostrarLocal() {
+  const m = $('municipio').selectedOptions[0];
+  $('selLocal').innerHTML = m ? `<span>Local selecionado</span><b>${esc(m.text)}/${esc($('uf').value)}</b> código IBGE ${esc(m.value)}` : '';
+}
+
+// Classificação vale para o código quando a nomenclatura é compatível (NCM/NBS)
+// e, se ela tiver anexo na LC 214/2025, o código está no anexo (mesma regra da API oficial).
+function vinculo(c, cod) {
+  const compativel = c.nomenclatura === 'NBS ou NCM' || c.nomenclatura === 'Não possui' || c.nomenclatura === tipo.toUpperCase();
+  if (!compativel) return { valida: false };
+  const ap = Calc.aplicavel(tipo === 'ncm' ? c.anexoNcm : c.anexoNbs, cod, $('data').value);
+  return { valida: ap.valido, especifica: ap.temAnexo && ap.valido };
+}
+
+// Reduções por setor da LC 214/2025 que a tabela oficial não liga a códigos NBS (dependem de quem presta).
+// Sugerimos a classificação pelo grupo da NBS, com o aviso dos requisitos. auto: já vem selecionada.
+const SETORIAIS = [
+  { classe: '200052', auto: true, prefixos: ['11301', '11302', '11401', '11402', '11403', '11405'],
+    aviso: 'Redução de 30% das profissões intelectuais (LC 214/2025, art. 127): vale para profissional registrado no conselho de classe (CRC, OAB, CREA, CAU, CRA, CRMV etc.) ou sociedade formada por profissionais habilitados que prestam o serviço. Se não cumprir os requisitos, use a 000001.' },
+  { classe: '200048', auto: true, prefixos: ['10303', '12507'],
+    aviso: 'Redução de 40% do regime de hotelaria e parques de diversão e temáticos (LC 214/2025). Confira se a atividade se enquadra.' },
+  { classe: '200051', auto: true, prefixos: ['118051', '118052'],
+    aviso: 'Redução de 40% do regime de agências de turismo (LC 214/2025). Confira se a atividade se enquadra.' },
+  { classe: '200049', auto: false, prefixos: ['104011', '104012', '104021', '104022'],
+    aviso: 'Redução de 40% só para transporte coletivo de passageiros rodoviário, ferroviário ou hidroviário (LC 214/2025). Táxi, fretamento e transporte individual seguem a 000001.' },
+  { classe: '200050', auto: false, prefixos: ['104014', '104023'],
+    aviso: 'Redução de 40% só para transporte aéreo regional coletivo (LC 214/2025). Os demais voos seguem a 000001.' },
+];
+function setorial(c, cod) {
+  if (!cod || tipo !== 'nbs') return null;
+  return SETORIAIS.find((x) => x.classe === c.codigo && x.prefixos.some((p) => cod.startsWith(p))) || null;
+}
+// Ordem das sugestões ★: anexo da lei (4) > redução do setor que já vem marcada (3) > padrão 000001 (2) > setor a conferir (1)
+function pesoClasse({ c, v }, cod) {
+  if (!cod) return 0;
+  if (v.especifica) return 4;
+  const st = v.valida ? setorial(c, cod) : null;
+  if (st) return st.auto ? 3 : 1;
+  return c.codigo === PADRAO ? 2 : 0;
+}
+function rotuloPeso(p) {
+  return { 4: 'benefício da lei', 3: 'redução do setor, confira requisitos', 2: 'padrão, mais comum', 1: 'redução do setor, só em alguns casos' }[p] || '';
+}
+
+function codigoCompleto() {
+  const cod = codigoAtual();
+  return cod.length === (tipo === 'ncm' ? 8 : 9) && cod in dados[tipo] ? cod : null;
+}
+
+function atualizarChave() {
+  const cod = codigoCompleto();
+  $('soValidas').disabled = !cod;
+  $('rotuloValidas').textContent = cod ? `Mostrar só as que valem para ${tipo.toUpperCase()} ${cod}` : `Mostrar só as que valem para este código (digite o ${tipo.toUpperCase()} completo)`;
+}
+
+const PADRAO = '000001';
+let restaurando = false;
+let ultimoCodigo = null;
+
+function renderClasses() {
+  atualizarChave();
+  const cod = codigoCompleto();
+  const atual = $('classTrib').value;
+  const mudouCodigo = cod !== ultimoCodigo;
+  ultimoCodigo = cod;
+  if (mudouCodigo && cod && !restaurando) $('soValidas').checked = true;
+  const filtrar = cod && $('soValidas').checked;
+  const validas = classes.map((c) => ({ c, v: cod ? vinculo(c, cod) : { valida: true } }))
+    .filter(({ v }) => !(filtrar && !v.valida));
+  // Campo CST: mostra só os CSTs que sobraram depois da chave; ao trocar de código, volta para "todos"
+  const porCst = new Map();
+  validas.forEach(({ c, v }) => {
+    const g = porCst.get(c.cst) || { desc: c.cstDescricao, n: 0, estrela: false };
+    g.n++; if (pesoClasse({ c, v }, cod)) g.estrela = true;
+    porCst.set(c.cst, g);
+  });
+  const cstAtual = mudouCodigo || !porCst.has($('cst').value) ? '' : $('cst').value;
+  $('cst').innerHTML = `<option value="">Todos os CST (${porCst.size})</option>`
+    + [...porCst.entries()].sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, g]) => `<option value="${k}">${g.estrela ? '★ ' : ''}${k} · ${esc(g.desc)} (${g.n})</option>`).join('');
+  $('cst').value = cstAtual;
+  let lista = cstAtual ? validas.filter(({ c }) => c.cst === cstAtual) : validas;
+  // Com o código digitado, as sugestões vêm no topo, com estrela:
+  // 1) as específicas do anexo da LC 214/2025 que inclui o código (benefício da lei);
+  // 2) a 000001, tributação integral, que é a regra padrão e a mais comum quando não há benefício.
+  const peso = (item) => pesoClasse(item, cod);
+  if (cod) lista.sort((a, b) => peso(b) - peso(a));
+  $('classTrib').innerHTML = lista.map((item) => {
+    const { c } = item;
+    const rotulo = peso(item) ? ` — ${rotuloPeso(peso(item))}` : '';
+    return `<option value="${c.codigo}" title="${esc(c.descricao)}" ${c.suportado ? '' : 'class="nao"'}>${peso(item) ? '★ ' : ''}${c.codigo} · ${esc(c.descricao)}${rotulo}${c.suportado ? '' : ' (não calculada)'}</option>`;
+  }).join('');
+  // Ao trocar de código, já deixa selecionada a primeira sugestão
+  if (!mudouCodigo && lista.some(({ c }) => c.codigo === atual)) $('classTrib').value = atual;
+  else if (lista.length) $('classTrib').value = lista[0].c.codigo;
+  const especificas = validas.filter(({ v }) => v.especifica).length;
+  const doSetor = validas.filter((item) => pesoClasse(item, cod) === 3).length;
+  $('contagem').textContent = !lista.length
+    ? 'Nenhuma classificação válida para este código.'
+    : `${lista.length} de ${classes.length} classificações` + (cstAtual ? ` no CST ${cstAtual}` : '') + (filtrar ? ' valem para este código.' : '.')
+      + (cod ? (especificas || doSetor
+        ? ` ★ no topo: ${especificas ? `${especificas} com benefício da lei para este código` : 'redução do setor deste serviço'} e a 000001 (padrão).`
+        : ' Este código não tem benefício específico na lei: o mais comum é a ★ 000001, tributação integral.'
+          + (validas.some((item) => pesoClasse(item, cod) === 1) ? ' A outra ★ tem redução do setor que vale só em alguns casos.' : '')) : '');
+  mostrarClasse();
+}
+
+function classeAtual() { return classes.find((x) => x.codigo === $('classTrib').value); }
+function codigoAtual() { return $('codigo').value.replace(/\D/g, ''); }
+
+function mostrarClasse() {
+  const c = classeAtual();
+  const info = $('infoClass');
+  info.className = 'info';
+  $('selClass').innerHTML = c ? `<span>Classificação selecionada</span><b>${esc(c.codigo)}</b> ${esc(c.descricao)}` : '';
+  if (!c) { $('avisoSetor').hidden = true; info.textContent = 'Nenhuma classificação encontrada para esse filtro.'; return; }
+  let txt = `CST ${c.cst} (${c.cstDescricao}) · ${c.tratamento}`;
+  if (c.reducao.some((r) => r > 0)) txt += ` · redução de ${pct(c.reducao[0])} na CBS e ${pct(c.reducao[1])} no IBS`;
+  const st = setorial(c, codigoCompleto());
+  $('avisoSetor').innerHTML = st ? `<b>Atenção:</b> ${esc(st.aviso)}` : '';
+  $('avisoSetor').hidden = !st;
+  if (!c.suportado) { info.className = 'info ruim'; info.textContent = `Não calculada nesta versão: ${c.motivo || c.tratamento}.`; return; }
+  const cod = codigoAtual();
+  const tamanho = tipo === 'ncm' ? 8 : 9;
+  if (cod.length === tamanho) {
+    const ap = Calc.aplicavel(tipo === 'ncm' ? c.anexoNcm : c.anexoNbs, cod, $('data').value);
+    if (ap.temAnexo) {
+      info.className = ap.valido ? 'info ok' : 'info ruim';
+      txt = (ap.valido ? '✓ Vale para este código. ' : `✗ Este ${tipo.toUpperCase()} não está no anexo desta classificação. `) + txt;
+    }
+  }
+  info.textContent = txt;
+}
+
+function consultarCodigo() {
+  const cod = codigoAtual();
+  const info = $('infoCodigo');
+  const tamanho = tipo === 'ncm' ? 8 : 9;
+  info.className = 'info';
+  $('selCodigo').innerHTML = '';
+  if (!cod) { info.textContent = ''; }
+  else if (cod.length < tamanho) { info.textContent = `${tipo.toUpperCase()} tem ${tamanho} dígitos.`; }
+  else {
+    const d = Calc.descrever(dados[tipo], tipo, cod);
+    if (d) {
+      info.textContent = '';
+      $('selCodigo').innerHTML = `<span>${tipo === 'ncm' ? 'Produto selecionado' : 'Serviço selecionado'}</span><div class="desc" id="descCod"><b>${esc(cod)}</b> ${esc(d)}</div><button type="button" class="ver-mais" id="verMais" hidden>ver descrição completa</button>`;
+      const dc = $('descCod'), vm = $('verMais');
+      vm.hidden = dc.scrollHeight <= dc.clientHeight + 2;
+      vm.addEventListener('click', () => { const ab = dc.classList.toggle('aberta'); vm.textContent = ab ? 'mostrar menos' : 'ver descrição completa'; });
+    }
+    else { info.className = 'info ruim'; info.textContent = `${tipo.toUpperCase()} ${cod} não encontrado na tabela oficial.`; }
+  }
+  renderClasses();
+}
+
+function verificarReferencia() {
+  $('blocoAliquotas').hidden = Calc.temReferencia(dados.meta, $('data').value);
+}
+
+function calcular(ev) {
+  ev.preventDefault();
+  $('erroForm').innerHTML = '';
+  const c = classeAtual();
+  const entrada = { classe: c, tipo, codigo: codigoAtual(), valor: num($('valor').value), data: $('data').value };
+  if (!Calc.temReferencia(dados.meta, entrada.data)) entrada.aliquotas = { cbs: num($('aCbs').value), ibsUf: num($('aUf').value), ibsMun: num($('aMun').value) };
+  const r = Calc.calcular(entrada, dados);
+  if (r.erros) {
+    $('resultado').innerHTML = `<div class="caixa erro"><b>Não foi possível calcular.</b><ul>${r.erros.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>`;
+    return;
+  }
+  const ano = Number(entrada.data.slice(0, 4));
+  const local = `${$('municipio').selectedOptions[0].text}/${$('uf').value}`;
+  const rodape = `<p class="info">CST ${esc(c.cst)} · Classificação ${esc(c.codigo)} · ${esc(c.descricao)}<br>${esc(local)} · ${entrada.data.split('-').reverse().join('/')}</p>`;
+  const selo = r.simulado ? '<span class="selo est">estimativa: sem alíquota oficial para esta data</span>' : '<span class="selo oficial">tabelas oficiais da Receita</span>';
+  const fase = ano === 2026 ? '<p class="info">2026 é o ano de teste: a CBS (0,9%) e o IBS (0,1%) aparecem na nota, mas são compensados com o PIS/Cofins, então o custo real não muda.</p>' : '';
+  let oficial;
+  if (r.semDestaque) {
+    oficial = `<p><b>${brl(0)}</b> · ${esc(c.cstDescricao)}: não há destaque de CBS nem de IBS nesta operação.</p>${rodape}`;
+  } else {
+    const linhas = r.tributos.map((t) => `<tr><td>${t.nome}</td><td>${pct(t.aliquota)}</td><td>${t.reducao ? pct(t.reducao) : '—'}</td><td>${pct(t.efetiva)}</td><td>${brl(t.valor)}</td></tr>`).join('');
+    const diferido = r.tributos.reduce((s2, t) => s2 + t.diferido, 0);
+    const memoria = r.tributos.map((t) => `<p><b>${t.nome}:</b> base ${brl(r.base)} × ${pct(t.aliquota)}${t.reducao ? ` × (1 − ${pct(t.reducao)})` : ''} = ${brl(t.valor || t.diferido)}${t.diferido ? ' (diferido)' : ''}.</p>`).join('');
+    oficial = `
+      ${fase}
+      ${r.simulado ? '<div class="caixa aviso">Ainda não há alíquota oficial para essa data. O cálculo usa as alíquotas do formulário (CBS de 11,3% estimada pelo TCU, se você não alterou).</div>' : ''}
+      ${diferido ? `<div class="caixa aviso">Operação com diferimento: ${brl(diferido)} de tributo calculado fica diferido e não é cobrado nesta etapa.</div>` : ''}
+      ${r.base !== entrada.valor ? `<div class="caixa aviso">Base de cálculo ajustada pela classificação: ${brl(r.base)}.</div>` : ''}
+      <div class="scroll"><table>
+        <thead><tr><th>Tributo</th><th>Alíquota</th><th>Redução</th><th>Efetiva</th><th>Valor</th></tr></thead>
+        <tbody>${linhas}</tbody>
+        <tfoot><tr><td>Total</td><td></td><td></td><td>${pct((r.total / entrada.valor * 100).toFixed(2))}</td><td>${brl(r.total)}</td></tr></tfoot>
+      </table></div>
+      ${rodape}
+      <details><summary>Memória de cálculo</summary>${memoria}</details>`;
+  }
+  $('resultado').innerHTML = `
+    <div class="res-rotulo">Resultado para ${brl(entrada.valor)} · ${tipo.toUpperCase()} ${esc(entrada.codigo)}</div>
+    <h2 class="achado" id="achado"></h2>
+    <div class="tempo">
+      <div class="colunas" id="colunas" role="group" aria-label="Carga de tributos por ano da reforma"></div>
+      <div class="anos" id="anos"></div>
+      <div class="legenda"><span><i style="background:#9aa4b2"></i>Impostos atuais</span><span><i style="background:var(--destaque)"></i>CBS</span><span><i style="background:#6cc6a2"></i>IBS</span><span class="tag">estimativa · toque num ano para ver o que muda</span></div>
+      <div class="marco" id="marco" aria-live="polite"></div>
+      <div class="sn-linha" id="snLinha"></div>
+    </div>
+    <section class="bloco">
+      <div class="bloco-tit">Cálculo da operação · CBS + IBS em ${ano} ${selo}</div>
+      ${oficial}
+      <div class="acoes"><button type="button" class="btn-sec" id="copiar">Copiar resultado</button><span class="info" id="copiado"></span></div>
+    </section>
+    <section class="bloco">
+      <div class="bloco-tit">Premissas da linha do tempo <span class="selo est">ajustáveis</span></div>
+      <p class="info">A linha do tempo usa as alíquotas gerais de hoje e as alíquotas cheias estimadas da reforma (CBS ${pct(dados['impostos-atuais'].reformaPlena.cbs)}, estimativa do TCU, + IBS ${pct(dados['impostos-atuais'].reformaPlena.ibs)}), com as reduções da classificação. Não considera créditos nem benefícios atuais.</p>
+      <div id="comparativo"></div>
+    </section>`;
+  anoSel = ano >= 2026 && ano <= 2033 ? ano : 2033;
+  $('copiar').addEventListener('click', copiarResultado);
+  iniciarComparativo(entrada, c, r);
+  salvarHistorico(entrada, c, r);
+  if (window.innerWidth <= 760) $('resultado').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}
+
+// ---------- Comparativo com os impostos atuais (estimativa) ----------
+let ctxComp = null;
+let compAberto = false; // lembra se a pessoa abriu o comparativo
+function iniciarComparativo(entrada, classe, r) {
+  const at = dados['impostos-atuais'];
+  const uf = $('uf').value;
+  ctxComp = { entrada, classe, r, totais: {} };
+  // IPI pela TIPI oficial (estimativa): só se aplica a indústria e importador
+  const ipiTipi = { valor: 0, dica: 'TIPI indisponível; informe se for indústria/importador' };
+  const tipi = dados.tipi && dados.tipi.aliquotas;
+  if (tipi && entrada.tipo === 'ncm') {
+    const a = tipi[entrada.codigo];
+    if (a === 'NT') { ipiTipi.dica = 'TIPI: NT (não tributado)'; }
+    else if (typeof a === 'number') { ipiTipi.valor = a; ipiTipi.dica = `TIPI: ${pct(a)} · estimativa, só indústria/importador`; }
+    else { ipiTipi.dica = 'NCM não achado na TIPI; informe se precisar'; }
+  }
+  const servico = entrada.tipo === 'nbs';
+  $('comparativo').innerHTML = `
+   <details class="comp-det" id="compDet" ${compAberto ? 'open' : ''}>
+    <summary>
+      <span class="comp-titulo">Impostos atuais usados na estimativa</span>
+      <span class="comp-resumo" id="compResumo"></span>
+      <span class="comp-abrir" aria-hidden="true"></span>
+    </summary>
+    <p class="info">Compara o que se paga hoje (${servico ? 'ISS + PIS/Cofins' : 'ICMS + PIS/Cofins + IPI'}) com a CBS/IBS. Os impostos atuais usam alíquotas gerais e <b>não consideram benefícios, substituição tributária nem Simples Nacional</b>. Ajuste abaixo se o seu caso for diferente.</p>
+    <div class="comp-campos">
+      ${servico
+        ? `<div><label for="cIss">ISS do município (%)</label><input id="cIss" inputmode="decimal" value="${String(at.iss.padrao).replace('.', ',')}"><div class="dica">entre ${at.iss.minimo}% e ${at.iss.maximo}%</div></div>`
+        : `<div><label for="cIcms">ICMS interno ${uf} (%)</label><input id="cIcms" inputmode="decimal" value="${String(at.icmsInterno.aliquotas[uf] ?? 18).replace('.', ',')}"><div class="dica">alíquota geral do estado</div></div>
+           <div><label for="cIpi">IPI (%)</label><input id="cIpi" inputmode="decimal" value="${String(ipiTipi.valor).replace('.', ',')}"><div class="dica">${ipiTipi.dica}</div></div>`}
+      <div><label for="cPis">PIS/Cofins (regime)</label><select id="cPis">
+        <option value="naoCumulativo">Real · 9,25%</option>
+        <option value="cumulativo">Presumido · 3,65%</option>
+        <option value="zero">Zero / isento</option>
+      </select></div>
+    </div>
+    <div id="compTabela"></div>
+   </details>
+   <div id="compSn"></div>`;
+  $('compDet').addEventListener('toggle', () => { compAberto = $('compDet').open; });
+  // Alimentos do Anexo I (cesta básica) hoje costumam ter PIS/Cofins zero (Lei 10.925/2004)
+  if (classe.codigo === '200003') $('cPis').value = 'zero';
+  $('compDet').querySelectorAll('input, select').forEach((el) => el.addEventListener('input', () => { atualizarComparativo(); if (dados.simples) atualizarSimples(); }));
+  atualizarComparativo();
+  iniciarSimples();
+}
+
+// ---------- Linha do tempo da transição (2026 a 2033, LC 214/2025) ----------
+// 2026: teste (CBS 0,9% + IBS 0,1%, compensáveis com PIS/Cofins). 2027: CBS cheia (0,1 ponto menor em 2027-2028),
+// fim do PIS/Cofins, IPI zerado (exceto ZFM), IBS de teste 0,1%. 2029-2032: ICMS/ISS a 90/80/70/60% e IBS a 10/20/30/40%.
+// 2033: ICMS e ISS extintos, IBS integral.
+const TRANSICAO = [
+  { ano: 2026, local: 1, ibs: 0, cbs: false, pis: true, ipi: true, titulo: 'Ano de teste', texto: 'A CBS (0,9%) e o IBS (0,1%) aparecem na nota, mas são compensados com o PIS/Cofins. O valor pago não muda: continuam ICMS/ISS, PIS/Cofins e IPI.' },
+  { ano: 2027, local: 1, ibs: 'teste', cbs: true, pis: false, ipi: false, titulo: 'A CBS entra de verdade', texto: 'Acabam o PIS e a Cofins, e a CBS passa a ser cobrada com a alíquota cheia (0,1 ponto menor em 2027 e 2028). O IPI é zerado, exceto para produtos que também são feitos na Zona Franca de Manaus, e começa o Imposto Seletivo. O IBS segue no teste de 0,1%.' },
+  { ano: 2028, local: 1, ibs: 'teste', cbs: true, pis: false, ipi: false, titulo: 'Mesma regra de 2027', texto: 'CBS cheia, ICMS e ISS integrais e IBS de teste de 0,1%.' },
+  { ano: 2029, local: 0.9, ibs: 0.1, cbs: true, pis: false, ipi: false, titulo: 'Começa a troca do ICMS/ISS pelo IBS', texto: 'ICMS e ISS caem para 90% das alíquotas de hoje, e o IBS passa a 10% da alíquota cheia.' },
+  { ano: 2030, local: 0.8, ibs: 0.2, cbs: true, pis: false, ipi: false, titulo: 'Transição: 80% / 20%', texto: 'ICMS e ISS em 80% das alíquotas de hoje; IBS em 20% da alíquota cheia.' },
+  { ano: 2031, local: 0.7, ibs: 0.3, cbs: true, pis: false, ipi: false, titulo: 'Transição: 70% / 30%', texto: 'ICMS e ISS em 70% das alíquotas de hoje; IBS em 30% da alíquota cheia.' },
+  { ano: 2032, local: 0.6, ibs: 0.4, cbs: true, pis: false, ipi: false, titulo: 'Transição: 60% / 40%', texto: 'ICMS e ISS em 60% das alíquotas de hoje; IBS em 40% da alíquota cheia.' },
+  { ano: 2033, local: 0, ibs: 1, cbs: true, pis: false, ipi: false, titulo: 'Reforma completa', texto: 'ICMS e ISS deixam de existir. Ficam a CBS e o IBS com as alíquotas cheias (e o Imposto Seletivo, para os produtos dele).' },
+];
+let anoSel = 2033;
+
+function linhaDoTempo() {
+  if (!ctxComp || !ctxComp.partes) return [];
+  const { entrada, classe } = ctxComp;
+  const v = entrada.valor;
+  const p = ctxComp.partes;
+  const pl = cbsIbsPleno(classe, v);
+  const temCbsIbs = classe.destacaCbsIbs && !classe.diferimento && !classe.aliquotaZero;
+  const base = v * (classe.fatorBase ?? 1);
+  const ibsTeste = temCbsIbs ? base * 0.1 * (1 - classe.reducao[1] / 100) / 100 : 0;
+  const ajusteCbs = temCbsIbs ? base * 0.1 * (1 - classe.reducao[0] / 100) / 100 : 0;
+  return TRANSICAO.map((t) => {
+    const atual = p.local * t.local + (t.pis ? p.pis : 0) + (t.ipi ? p.ipi : 0);
+    const cbs = t.cbs ? Math.max(pl.cbs - (t.ano <= 2028 ? ajusteCbs : 0), 0) : 0;
+    const ibs = t.ibs === 'teste' ? ibsTeste : pl.ibs * t.ibs;
+    const total = atual + cbs + ibs;
+    return { ...t, atual, cbs, ibs, total, carga: total / v * 100 };
+  });
+}
+
+function atualizarTotais() {
+  if (!$('colunas') || !ctxComp || !ctxComp.partes) return;
+  const anos = linhaDoTempo();
+  const v = ctxComp.entrada.valor;
+  const anoOp = Number(ctxComp.entrada.data.slice(0, 4));
+  const max = Math.max(...anos.map((a) => a.total), 0.0001);
+  const h = (x) => `${(x / max * 100).toFixed(2)}%`;
+  const p1 = (x) => pct(x.toFixed(1));
+  $('colunas').innerHTML = anos.map((a) => `
+    <button type="button" class="col${a.ano === anoOp ? ' sel' : ''}${a.ano === anoSel ? ' ativo' : ''}" data-ano="${a.ano}" aria-pressed="${a.ano === anoSel}" aria-label="${a.ano}: ${p1(a.carga)}, ${brl(a.total)}">
+      <span class="pct" style="bottom:${h(a.total)}">${p1(a.carga)}</span>
+      <span class="seg ibs" style="height:${h(a.ibs)}"></span>
+      <span class="seg cbs" style="height:${h(a.cbs)}"></span>
+      <span class="seg atual" style="height:${h(a.atual)}"></span>
+    </button>`).join('');
+  $('anos').innerHTML = anos.map((a) => `<span class="${a.ano === anoOp ? 'sel' : ''}">${a.ano}</span>`).join('');
+  $('colunas').querySelectorAll('.col').forEach((b) => b.addEventListener('click', () => { anoSel = Number(b.dataset.ano); atualizarTotais(); }));
+  const sel = anos.find((a) => a.ano === anoSel) || anos[anos.length - 1];
+  const nomeLocal = ctxComp.entrada.tipo === 'nbs' ? 'ISS' : 'ICMS';
+  const partes = [];
+  if (sel.atual) partes.push(`impostos atuais ${brl(sel.atual)}`);
+  if (sel.cbs) partes.push(`CBS ${brl(sel.cbs)}`);
+  if (sel.ibs) partes.push(`IBS ${brl(sel.ibs)}`);
+  $('marco').innerHTML = `<b>${sel.ano} · ${esc(sel.titulo)}${sel.ano === anoOp ? ' (ano da operação)' : ''}</b>${esc(sel.texto)}
+    <div class="valores">Neste item: ${p1(sel.carga)} = ${brl(sel.total)}${partes.length > 1 ? ` (${partes.join(' + ')})` : ''}.${sel.local > 0 && sel.local < 1 ? ` ${nomeLocal} a ${pct(sel.local * 100)} da alíquota de hoje.` : ''}</div>`;
+  const ini = anos[0], fim = anos[anos.length - 1];
+  const dif = fim.carga - ini.carga;
+  $('achado').innerHTML = Math.abs(dif) < 0.05
+    ? `Com a reforma completa, em 2033, a carga fica praticamente igual: <b>${p1(fim.carga)}</b>`
+    : `Com a reforma completa, em 2033, a carga estimada ${dif < 0 ? 'cai' : 'sobe'} de ${p1(ini.carga)} para <b>${p1(fim.carga)}</b>`;
+  const t = ctxComp.totais || {};
+  $('snLinha').textContent = t.sn != null ? `Se a empresa for do Simples Nacional, o DAS de hoje fica em ${p1(t.sn / v * 100)} (${brl(t.sn)}). As opções do Simples na reforma estão no comparativo abaixo.` : '';
+}
+
+function textoResultado() {
+  const { entrada, classe, r } = ctxComp;
+  return [
+    'Calculadora CBS/IBS',
+    `${entrada.tipo.toUpperCase()} ${entrada.codigo} · Classificação ${classe.codigo} (CST ${classe.cst})`,
+    `${$('municipio').selectedOptions[0].text}/${$('uf').value} · ${entrada.data.split('-').reverse().join('/')} · valor ${brl(entrada.valor)}`,
+    '',
+    `CBS + IBS em ${entrada.data.slice(0, 4)}${r.simulado ? ' (estimativa)' : ''}: ${brl(r.total || 0)}`,
+    ...(r.tributos || []).map((t) => `  ${t.nome}: ${pct(t.efetiva)} = ${brl(t.valor)}`),
+    '',
+    'Linha do tempo da reforma (estimativa):',
+    ...linhaDoTempo().map((a) => `  ${a.ano}: ${pct(a.carga.toFixed(2))} = ${brl(a.total)}`),
+  ].join('\n');
+}
+
+async function copiarResultado() {
+  try { await navigator.clipboard.writeText(textoResultado()); $('copiado').textContent = 'Copiado.'; }
+  catch { $('copiado').textContent = 'Não foi possível copiar neste navegador.'; }
+  setTimeout(() => { if ($('copiado')) $('copiado').textContent = ''; }, 2500);
+}
+
+// ---------- Últimas simulações (guardadas só neste navegador) ----------
+const CHAVE_HIST = 'calc-cbs-ibs-historico';
+function lerHistorico() { try { return JSON.parse(localStorage.getItem(CHAVE_HIST)) || []; } catch { return []; } }
+function salvarHistorico(entrada, c, r) {
+  const item = { tipo: entrada.tipo, codigo: entrada.codigo, classe: c.codigo, valor: $('valor').value, data: entrada.data, uf: $('uf').value, mun: $('municipio').value, munNome: $('municipio').selectedOptions[0].text };
+  const chave = (x) => [x.tipo, x.codigo, x.classe, x.valor, x.data, x.mun].join('|');
+  const lista = [item, ...lerHistorico().filter((x) => chave(x) !== chave(item))].slice(0, 6);
+  try { localStorage.setItem(CHAVE_HIST, JSON.stringify(lista)); } catch { /* sem armazenamento */ }
+  mostrarHistorico();
+}
+function mostrarHistorico() {
+  const lista = lerHistorico();
+  $('historico').hidden = !lista.length;
+  $('histLista').innerHTML = lista.map((x, i) => `<li><button type="button" data-i="${i}"><span>${esc(String(x.tipo).toUpperCase())} ${esc(x.codigo)} · ${esc(x.classe)}</span><b>R$ ${esc(x.valor)}</b><small>${esc(x.munNome)}/${esc(x.uf)} · ${esc(String(x.data).split('-').reverse().join('/'))} · clique para refazer</small></button></li>`).join('');
+  $('histLista').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => restaurar(lista[Number(b.dataset.i)])));
+}
+function restaurar(x) {
+  if (!x) return;
+  restaurando = true;
+  const aba = document.querySelector(`.abas button[data-tipo="${x.tipo}"]`);
+  if (aba && tipo !== x.tipo) aba.click();
+  $('codigo').value = x.codigo;
+  $('data').value = x.data; verificarReferencia();
+  $('soValidas').checked = false;
+  consultarCodigo();
+  if ([...$('classTrib').options].some((o) => o.value === x.classe)) { $('classTrib').value = x.classe; mostrarClasse(); }
+  restaurando = false;
+  $('valor').value = x.valor;
+  $('uf').value = x.uf; preencherMunicipios();
+  $('municipio').value = x.mun; mostrarLocal();
+  $('form').requestSubmit();
+}
+
+// CBS + IBS com as alíquotas plenas (2033), aplicando as reduções da classificação
+function cbsIbsPleno(classe, valor) {
+  const rp = dados['impostos-atuais'].reformaPlena;
+  if (!classe.destacaCbsIbs || classe.diferimento || classe.aliquotaZero) return { cbs: 0, ibs: 0, total: 0 };
+  const base = valor * (classe.fatorBase ?? 1);
+  const cbs = base * rp.cbs * (1 - classe.reducao[0] / 100) / 100;
+  const ibs = base * rp.ibs * (1 - classe.reducao[1] / 100) / 100;
+  return { cbs, ibs, total: cbs + ibs };
+}
+
+function atualizarComparativo() {
+  const { entrada, classe, r } = ctxComp;
+  const at = dados['impostos-atuais'];
+  const valor = entrada.valor;
+  const servico = entrada.tipo === 'nbs';
+  const lerPct = (id) => { const v = num($(id)?.value ?? 0); return Number.isFinite(v) && v >= 0 ? v : 0; };
+  const regime = $('cPis').value;
+  const aliqPis = regime === 'zero' ? 0 : at.pisCofins[regime];
+  const atuais = [];
+  if (servico) {
+    const iss = lerPct('cIss');
+    atuais.push(['ISS', iss, valor * iss / 100]);
+    atuais.push(['PIS/Cofins', aliqPis, valor * aliqPis / 100]);
+  } else {
+    const icms = lerPct('cIcms'), ipi = lerPct('cIpi');
+    const vIcms = valor * icms / 100;
+    atuais.push(['ICMS', icms, vIcms]);
+    // PIS/Cofins sem o ICMS na base (Tema 69 do STF)
+    atuais.push(['PIS/Cofins (base sem ICMS)', aliqPis, (valor - vIcms) * aliqPis / 100]);
+    if (ipi) atuais.push(['IPI (por fora, estimativa TIPI)', ipi, valor * ipi / 100]);
+  }
+  const totalAtual = atuais.reduce((s, [, , v]) => s + v, 0);
+  const cargaAtual = totalAtual / valor * 100;
+
+  // Reforma: o cálculo do ano da operação e a estimativa com as alíquotas plenas
+  const cargaAno = r.total / valor * 100;
+  const rp = at.reformaPlena;
+  const plena = cbsIbsPleno(classe, valor).total;
+  const cargaPlena = plena / valor * 100;
+  const dif = cargaPlena - cargaAtual;
+  const ano = Number(entrada.data.slice(0, 4));
+
+  ctxComp.totais = { ...ctxComp.totais, plena, atual: totalAtual, atualNome: atuais.map(([n]) => n.split(' ')[0]).join(' + ') };
+  ctxComp.partes = { local: atuais[0][2], pis: atuais[1][2], ipi: atuais[2] ? atuais[2][2] : 0 };
+  atualizarTotais();
+  const fmtPP = (x) => Math.abs(x).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  $('compResumo').innerHTML = `Hoje: ${servico ? 'ISS' : 'ICMS'} ${pct(atuais[0][1])}, PIS/Cofins ${pct(aliqPis)}${servico ? '' : `, IPI ${pct(lerPct('cIpi'))}`}. Ajuste se o seu caso for diferente.`;
+  $('compTabela').innerHTML = `
+    <table class="comp">
+      <thead><tr><th>Cenário</th><th>Carga</th><th>Valor</th></tr></thead>
+      <tbody>
+        <tr class="grupo"><td>Impostos atuais (estimativa)</td><td>${pct(cargaAtual.toFixed(2))}</td><td>${brl(totalAtual)}</td></tr>
+        ${atuais.map(([n, a, v]) => `<tr class="sub"><td>${n} · ${pct(a)}</td><td></td><td>${brl(v)}</td></tr>`).join('')}
+        <tr class="grupo"><td>CBS + IBS em ${ano} (cálculo acima)</td><td>${pct(cargaAno.toFixed(2))}</td><td>${brl(r.total)}</td></tr>
+        <tr class="grupo"><td>CBS + IBS plenos, a partir de 2033 (estimativa ${pct(rp.cbs + rp.ibs)}, CBS do TCU)</td><td>${pct(cargaPlena.toFixed(2))}</td><td>${brl(plena)}</td></tr>
+      </tbody>
+    </table>
+    <div class="caixa ${dif > 0.005 ? 'aviso' : 'ok-caixa'}">Com as alíquotas plenas, a carga ${Math.abs(dif) < 0.005 ? 'fica igual à' : `<b>${dif > 0 ? 'sobe' : 'cai'} ${Math.abs(dif).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ponto${Math.abs(dif) >= 2 ? 's' : ''} percentua${Math.abs(dif) >= 2 ? 'is' : 'l'}</b> em relação à`} estimativa atual (${dif > 0 ? '+' : ''}${brl(plena - totalAtual)}).</div>
+    ${ano < 2033 ? `<p class="info">Entre 2026 e 2032 os impostos atuais e a CBS/IBS convivem em transição: em 2026 a CBS/IBS é um teste de 1%, compensável com PIS/Cofins. A comparação justa é com a linha "plenos".</p>` : ''}
+    ${classe.reducao.some((x) => x > 0) ? '<p class="info">Esta classificação tem benefício na reforma. Hoje o mesmo item pode ter benefícios de ICMS ou PIS/Cofins (como a cesta básica, com PIS/Cofins zero); se for o caso, ajuste os campos acima.</p>' : ''}
+    <details><summary>Fontes e premissas</summary>
+      <p>${esc(at.icmsInterno.fonte)}</p>${dados.tipi ? `<p>IPI: ${esc(dados.tipi.fonte)}, lida em ${dados.tipi.dataLeitura.split('-').reverse().join('/')}. Estimativa: o IPI só é cobrado na saída da indústria ou do importador, e algumas NCMs têm exceções (Ex) não consideradas.</p>` : ''}<p>${esc(at.pisCofins.fonte)}</p><p>${esc(at.iss.fonte)}</p><p>${esc(at.reformaPlena.fonte)}</p>
+      <p>Não considera créditos de etapas anteriores, que existem no regime atual não cumulativo e na reforma. ${esc(at.observacao)}</p>
+    </details>`;
+}
+
+// ---------- Comparativo no Simples Nacional (estimativa) ----------
+let snAberto = false;
+let snAnexo = null; // lembra a escolha da pessoa
+let snRbt = '360.000';
+let snCompras = '0';
+
+// DAS pelas tabelas da LC 123: alíquota efetiva e quanto dela é de cada tributo
+function calcularDas(sn, anexo, rbt12, aliqLocal) {
+  const t = sn.anexos[anexo];
+  const faixa = sn.limites.findIndex((l) => rbt12 <= l);
+  if (faixa < 0) return { erro: `Receita acima de ${brl(sn.limites[sn.limites.length - 1])}: a empresa sai do Simples Nacional.` };
+  const efetiva = faixa === 0 ? t.nominal[0] : (rbt12 * t.nominal[faixa] / 100 - t.deduzir[faixa]) / rbt12 * 100;
+  const rep = t.reparticao[faixa];
+  const parte = {};
+  for (const [trib, p] of Object.entries(rep)) parte[trib] = efetiva * p / 100;
+  // ISS limitado a 5% efetivos; o excesso vai para os tributos federais, na proporção deles
+  let excessoIss = 0;
+  if (parte.ISS > sn.issMaximo) {
+    excessoIss = parte.ISS - sn.issMaximo;
+    parte.ISS = sn.issMaximo;
+    const federais = Object.keys(parte).filter((k) => k !== 'ISS');
+    const soma = federais.reduce((s2, k) => s2 + rep[k], 0);
+    federais.forEach((k) => { parte[k] += excessoIss * rep[k] / soma; });
+  }
+  // Acima do sublimite (6ª faixa), ICMS/ISS saem do DAS e são pagos pelas regras normais
+  const local = anexo === 'I' || anexo === 'II' ? 'ICMS' : 'ISS';
+  const foraDoDas = faixa === 5 ? aliqLocal : 0;
+  return { faixa, efetiva, parte, excessoIss, local, foraDoDas };
+}
+
+function iniciarSimples() {
+  const alvo = $('compSn');
+  const sn = dados.simples;
+  if (!alvo || !sn) return;
+  const { entrada } = ctxComp;
+  const servico = entrada.tipo === 'nbs';
+  const anexo = snAnexo || (servico ? 'III' : 'I');
+  alvo.innerHTML = `
+   <details class="comp-det" id="snDet" ${snAberto ? 'open' : ''}>
+    <summary>
+      <span class="comp-titulo">Comparativo no Simples Nacional <span class="tag">estimativa</span></span>
+      <span class="comp-resumo" id="snResumo"></span>
+      <span class="comp-abrir" aria-hidden="true"></span>
+    </summary>
+    <p class="info">Para empresa optante pelo Simples: compara o DAS de hoje com as duas opções da reforma a partir de 2027, que são continuar com a CBS/IBS <b>dentro do DAS</b> ou recolher a CBS/IBS <b>por fora</b>, no regime regular, ficando o resto no DAS.</p>
+    <div class="comp-campos">
+      <div><label for="snAnexo">Atividade (anexo)</label><select id="snAnexo">
+        ${Object.entries(sn.anexos).map(([k, a]) => `<option value="${k}" ${k === anexo ? 'selected' : ''}>${esc(a.nome)}</option>`).join('')}
+      </select></div>
+      <div><label for="snRbt">Receita dos últimos 12 meses (R$)</label><input id="snRbt" inputmode="decimal" value="${esc(snRbt)}"><div class="dica" id="snFaixa"></div></div>
+      <div><label for="snCompras">Compras com crédito (% do preço)</label><input id="snCompras" inputmode="decimal" value="${esc(snCompras)}"><div class="dica">só conta na opção por fora</div></div>
+    </div>
+    <div id="snTabela"></div>
+   </details>`;
+  $('snDet').addEventListener('toggle', () => { snAberto = $('snDet').open; });
+  $('snAnexo').addEventListener('change', () => { snAnexo = $('snAnexo').value; atualizarSimples(); });
+  mascaraValor($('snRbt'));
+  $('snRbt').addEventListener('input', () => { snRbt = $('snRbt').value; atualizarSimples(); });
+  $('snCompras').addEventListener('input', () => { snCompras = $('snCompras').value; atualizarSimples(); });
+  atualizarSimples();
+}
+
+function atualizarSimples() {
+  const sn = dados.simples;
+  const { entrada, classe } = ctxComp;
+  const at = dados['impostos-atuais'];
+  const valor = entrada.valor;
+  const anexo = $('snAnexo').value;
+  const rbt12 = num($('snRbt').value);
+  const compras = Math.min(Math.max(num($('snCompras').value) || 0, 0), 100);
+  const lerPct = (id, padrao) => { const el = $(id); const v = el ? num(el.value) : padrao; return Number.isFinite(v) && v >= 0 ? v : padrao; };
+  const aliqLocal = anexo === 'I' || anexo === 'II' ? lerPct('cIcms', at.icmsInterno.aliquotas[$('uf').value] ?? 18) : lerPct('cIss', at.iss.padrao);
+  if (!(rbt12 > 0)) {
+    ctxComp.totais.sn = null; atualizarTotais();
+    $('snResumo').textContent = 'Informe a receita dos últimos 12 meses.';
+    $('snFaixa').textContent = ''; $('snTabela').innerHTML = '';
+    return;
+  }
+  const d = calcularDas(sn, anexo, rbt12, aliqLocal);
+  if (d.erro) {
+    ctxComp.totais.sn = null; atualizarTotais();
+    $('snResumo').textContent = d.erro; $('snFaixa').textContent = ''; $('snTabela').innerHTML = '';
+    return;
+  }
+  const t = sn.anexos[anexo];
+  const p2 = (x) => pct(x.toFixed(2));
+  $('snFaixa').textContent = `${d.faixa + 1}ª faixa · nominal ${pct(t.nominal[d.faixa])} · efetiva ${p2(d.efetiva)}`;
+
+  // Hoje
+  const vDas = valor * d.efetiva / 100;
+  const vFora = valor * d.foraDoDas / 100;
+  const hoje = vDas + vFora;
+  // Partes do DAS que viram CBS/IBS na reforma
+  const pCbsDas = (d.parte.PIS || 0) + (d.parte.Cofins || 0);
+  const pIbsDas = (d.parte.ICMS || 0) + (d.parte.ISS || 0);
+  const plena = cbsIbsPleno(classe, valor);
+  const rp = at.reformaPlena;
+
+  // Opção 1: CBS/IBS dentro do DAS (total do DAS igual); na 6ª faixa o IBS fica fora, como o ICMS/ISS hoje
+  const vCbsDentro = valor * pCbsDas / 100;
+  const vIbsDentro = d.faixa === 5 ? plena.ibs : valor * pIbsDas / 100;
+  const dentro = vDas + (d.faixa === 5 ? plena.ibs : 0);
+  const creditoDentro = vCbsDentro + vIbsDentro;
+
+  // Opção 2: CBS/IBS por fora, no regime regular, com crédito das compras
+  const dasSemCbsIbs = valor * (d.efetiva - pCbsDas - pIbsDas) / 100;
+  const creditoCompras = valor * compras / 100 * (rp.cbs + rp.ibs) / 100;
+  const cbsIbsFora = Math.max(plena.total - creditoCompras, 0);
+  const fora = dasSemCbsIbs + cbsIbsFora;
+
+  const c = (v) => v / valor * 100;
+  const menor = Math.abs(dentro - fora) < 0.005 ? null : dentro < fora ? 'dentro' : 'fora';
+  ctxComp.totais.sn = hoje; ctxComp.totais.snNome = `DAS ${t.nome.split(' · ')[0]}, ${d.faixa + 1}ª faixa${d.foraDoDas ? ` + ${d.local} por fora` : ''}`;
+  atualizarTotais();
+  $('snResumo').innerHTML = `DAS hoje <b>${p2(c(hoje))}</b> (${brl(hoje)}) → reforma plena: dentro do DAS <b>${p2(c(dentro))}</b> · por fora <b>${p2(c(fora))}</b>
+    ${menor ? `<span class="comp-dif cai">menor: ${menor === 'dentro' ? 'dentro do DAS' : 'por fora'}</span>` : ''}`;
+
+  const outros = Object.entries(d.parte).filter(([k]) => !['PIS', 'Cofins', 'ICMS', 'ISS'].includes(k));
+  const ano = Number(entrada.data.slice(0, 4));
+  $('snTabela').innerHTML = `
+    <table class="comp">
+      <thead><tr><th>Cenário</th><th>Carga</th><th>Valor</th></tr></thead>
+      <tbody>
+        <tr class="grupo"><td>Simples hoje · DAS ${esc(t.nome.split(' · ')[0])}</td><td>${p2(c(hoje))}</td><td>${brl(hoje)}</td></tr>
+        <tr class="sub"><td>PIS/Cofins no DAS · ${p2(pCbsDas)}</td><td></td><td>${brl(vCbsDentro)}</td></tr>
+        ${d.faixa === 5
+          ? `<tr class="sub"><td>${d.local} por fora do DAS (acima de ${brl(sn.sublimite)}) · ${pct(d.foraDoDas)}</td><td></td><td>${brl(vFora)}</td></tr>`
+          : `<tr class="sub"><td>${d.local} no DAS · ${p2(pIbsDas)}</td><td></td><td>${brl(valor * pIbsDas / 100)}</td></tr>`}
+        <tr class="sub"><td>Demais (${outros.map(([k]) => k).join(', ')}) · ${p2(outros.reduce((s2, [, v]) => s2 + v, 0))}</td><td></td><td>${brl(dasSemCbsIbs)}</td></tr>
+        <tr class="grupo"><td>Reforma · CBS/IBS dentro do DAS</td><td>${p2(c(dentro))}</td><td>${brl(dentro)}</td></tr>
+        <tr class="sub"><td>Cliente pode creditar só o que foi pago de CBS/IBS no DAS</td><td></td><td>${brl(creditoDentro)}</td></tr>
+        <tr class="grupo"><td>Reforma · CBS/IBS por fora (regime regular)</td><td>${p2(c(fora))}</td><td>${brl(fora)}</td></tr>
+        <tr class="sub"><td>DAS sem PIS/Cofins e ${d.local}</td><td></td><td>${brl(dasSemCbsIbs)}</td></tr>
+        <tr class="sub"><td>CBS + IBS plenos${classe.reducao.some((x) => x > 0) ? ' com a redução da classificação' : ''}</td><td></td><td>${brl(plena.total)}</td></tr>
+        ${creditoCompras ? `<tr class="sub"><td>− crédito das compras (${pct(compras)} do preço × ${pct(rp.cbs + rp.ibs)})</td><td></td><td>−${brl(Math.min(creditoCompras, plena.total))}</td></tr>` : ''}
+        <tr class="sub"><td>Cliente pode creditar a CBS/IBS cheia</td><td></td><td>${brl(plena.total)}</td></tr>
+      </tbody>
+    </table>
+    <div class="caixa ${menor === 'fora' ? 'ok-caixa' : 'aviso'}">${menor === null ? 'As duas opções dão a mesma carga.' : menor === 'dentro'
+      ? `Ficar <b>dentro do DAS</b> custa ${brl(fora - dentro)} a menos nesta venda. Por fora vale a pena quando o cliente é empresa que aproveita crédito (ele credita ${brl(plena.total)} em vez de ${brl(creditoDentro)}) ou quando há muitas compras com crédito.`
+      : `Recolher <b>por fora</b> custa ${brl(dentro - fora)} a menos nesta venda e ainda dá crédito cheio ao cliente.`}</div>
+    ${compras === 0 ? '<p class="info">Na opção por fora a empresa também credita a CBS/IBS das compras. Informe em "Compras com crédito" quanto do preço de venda são compras de fornecedores do regime regular (mercadoria para revenda, insumos, serviços), para uma comparação mais justa.</p>' : ''}
+    ${ano < 2033 ? '<p class="info">Na transição, a CBS entra no lugar do PIS/Cofins em 2027 e o IBS substitui o ICMS/ISS aos poucos de 2029 a 2032. Em 2026 nada muda para o Simples. A tabela mostra a situação plena, de 2033.</p>' : ''}
+    ${t.nota ? `<p class="info">${esc(t.nota)}</p>` : ''}
+    <details><summary>Fontes e premissas</summary>
+      <p>${esc(sn.fonte)}</p><p>${esc(sn.reforma)}</p>
+      <p>Alíquota efetiva = (receita 12 meses × alíquota nominal − parcela a deduzir) ÷ receita 12 meses. ${d.excessoIss ? `O ISS foi limitado a ${pct(sn.issMaximo)} e o excedente (${p2(d.excessoIss)}) foi repassado aos tributos federais, como manda a LC 123.` : `O ISS dentro do DAS é limitado a ${pct(sn.issMaximo)}.`}</p>
+      <p>Premissas: o total do DAS continua o mesmo na reforma; dentro do DAS não se aplicam as reduções da classificação; o crédito das compras usa a alíquota cheia de ${pct(rp.cbs + rp.ibs)}; o IPI do Anexo II segue no DAS. A calculadora oficial do Simples da Receita (calculadora-rtc-simples-nacional) recebe as alíquotas do DAS já prontas e por isso não foi usada nesta conta.</p>
+    </details>`;
+}
+
+document.querySelectorAll('.abas button').forEach((b) => b.addEventListener('click', () => {
+  tipo = b.dataset.tipo;
+  document.querySelectorAll('.abas button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  $('rotuloCodigo').textContent = tipo === 'ncm' ? 'Código NCM' : 'Código NBS';
+  $('codigo').placeholder = tipo === 'ncm' ? 'ex.: 84713012' : 'ex.: 122011200';
+  consultarCodigo();
+}));
+$('codigo').addEventListener('input', consultarCodigo);
+$('soValidas').addEventListener('change', renderClasses);
+$('cst').addEventListener('change', renderClasses);
+$('classTrib').addEventListener('change', mostrarClasse);
+$('uf').addEventListener('change', preencherMunicipios);
+$('municipio').addEventListener('change', mostrarLocal);
+$('data').addEventListener('change', () => { verificarReferencia(); consultarCodigo(); });
+$('form').addEventListener('submit', calcular);
+
+// Valor com ponto de milhar e vírgula de centavos enquanto digita (ex.: 1.234.567,89)
+function mascaraValor(el, casas = 2) {
+  if (!el || el.dataset.mascara) return;
+  el.dataset.mascara = '1';
+  el.addEventListener('input', () => {
+    const antes = el.value.slice(0, el.selectionStart ?? el.value.length).replace(/[^\d,]/g, '').length;
+    const v = el.value.replace(/[^\d,]/g, '');
+    const i = v.indexOf(',');
+    const inteiro = (i < 0 ? v : v.slice(0, i)).replace(/^0+(?=\d)/, '');
+    const dec = i < 0 ? null : v.slice(i + 1).replace(/,/g, '').slice(0, casas);
+    const grupos = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const novo = dec === null ? grupos : `${grupos || '0'},${dec}`;
+    el.value = novo;
+    let n = 0, p = 0;
+    while (p < novo.length && n < antes) { if (/[\d,]/.test(novo[p])) n++; p++; }
+    try { el.setSelectionRange(p, p); } catch { /* campo sem cursor */ }
+  });
+  el.addEventListener('blur', () => {
+    if (!el.value) return;
+    const n = num(el.value);
+    if (Number.isFinite(n)) el.value = n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  });
+}
+mascaraValor($('valor'));
+
+
+// ---------- Busca de NCM/NBS por nome ----------
+const indiceNome = {};
+let tipoBusca = 'ncm';
+function montarIndice(t) {
+  if (indiceNome[t]) return indiceNome[t];
+  const tam = t === 'ncm' ? 8 : 9;
+  indiceNome[t] = Object.keys(dados[t]).filter((c) => c.length === tam).map((c) => {
+    const proprio = dados[t][c].replace(/^[-\s]+/, '');
+    const caminho = Calc.descrever(dados[t], t, c);
+    return { c, proprio, caminho, txtProprio: semAcento(proprio), txt: semAcento(caminho) };
+  });
+  return indiceNome[t];
+}
+function destacar(texto, palavras, exato = false) {
+  // marca os trechos que batem com a busca (comparando sem acento) e só depois escapa o HTML
+  const base = semAcento(texto);
+  const marcado = new Array(texto.length).fill(false);
+  (exato ? palavras : palavras.map(radical)).forEach((p) => { let i = base.indexOf(p); while (i !== -1) { for (let k = i; k < i + p.length; k++) marcado[k] = true; i = base.indexOf(p, i + 1); } });
+  let h = '', dentro = false;
+  for (let k = 0; k < texto.length; k++) {
+    if (marcado[k] !== dentro) { h += marcado[k] ? '<mark>' : '</mark>'; dentro = marcado[k]; }
+    h += esc(texto[k]);
+  }
+  return h + (dentro ? '</mark>' : '');
+}
+// Nomes populares que não aparecem no texto oficial da NCM → prefixos de código
+const SINONIMOS = {
+  notebook: ['847130'], laptop: ['847130'], computador: ['8471'], pc: ['8471'],
+  celular: ['85171'], smartphone: ['85171'], telefone: ['8517'],
+  geladeira: ['84182'], freezer: ['8418'], televisao: ['85287'], tv: ['85287'],
+  refrigerante: ['2202'], cafe: ['0901'], leite: ['0401', '0402'], cigarro: ['2402'],
+  gasolina: ['2710125'], feijao: ['07133'], camiseta: ['6109'], sapato: ['64'], tenis: ['64'],
+  carro: ['8703'], automovel: ['8703'], moto: ['8711'], remedio: ['3003', '3004'], medicamento: ['3003', '3004'],
+  perfume: ['3303'], pao: ['1905'], bolacha: ['1905'], biscoito: ['1905'],
+};
+// Aceita plural e variações simples: "portatil" acha "portáteis", "medico" acha "médicos"
+const radical = (p) => (p.length >= 6 ? p.slice(0, p.length - 2) : p);
+function bate(x, p) {
+  return x.txt.includes(p) || x.txt.includes(radical(p)) || x.c.startsWith(p) || (SINONIMOS[p] || []).some((pre) => x.c.startsWith(pre));
+}
+// Nota de relevância: nome popular (sinônimo) vale mais; palavra no nome do próprio item vem depois
+function relevancia(x, p) {
+  if ((SINONIMOS[p] || []).some((pre) => x.c.startsWith(pre))) return 3;
+  if (x.txtProprio.includes(p)) return 2;
+  return x.txtProprio.includes(radical(p)) ? 1 : 0;
+}
+
+function buscarPorNome() {
+  const q = semAcento($('buscaNome').value.trim());
+  const palavras = q.split(/\s+/).filter((p) => p.length >= 2);
+  const lista = $('buscaResultados');
+  if (!palavras.length) { lista.innerHTML = ''; $('buscaContagem').textContent = 'Digite pelo menos 2 letras.'; return; }
+  const achados = montarIndice(tipoBusca)
+    .filter((x) => palavras.every((p) => bate(x, p)))
+    // primeiro os que têm as palavras na descrição do próprio item, depois os que só têm no grupo
+    .map((x) => ({ x, nota: palavras.reduce((t, p) => t + relevancia(x, p), 0) }))
+    .sort((a, b) => b.nota - a.nota || a.x.c.localeCompare(b.x.c));
+  const LIMITE = 60;
+  $('buscaContagem').textContent = achados.length
+    ? `${achados.length} resultado${achados.length > 1 ? 's' : ''}${achados.length > LIMITE ? `, mostrando os ${LIMITE} primeiros. Refine a busca com mais palavras.` : '.'}`
+    : `Nada encontrado. Tente outra palavra ou veja em ${tipoBusca === 'ncm' ? 'Serviços - NBS' : 'Produtos - NCM'}.`;
+  lista.innerHTML = achados.slice(0, LIMITE).map(({ x }) =>
+    `<li><button type="button" data-codigo="${x.c}"><span class="cod">${x.c}</span>${destacar(x.proprio, palavras)}<span class="cam">${destacar(x.caminho, palavras)}</span></button></li>`).join('');
+}
+function trocarTipoBusca(t) {
+  tipoBusca = t;
+  document.querySelectorAll('.busca-abas button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.busca === t)));
+  $('buscaNome').placeholder = t === 'ncm' ? 'ex.: arroz, notebook, cerveja' : 'ex.: educação, consulta médica, transporte';
+  buscarPorNome();
+}
+$('abrirBuscaNome').addEventListener('click', () => {
+  abrirAjuda('busca');
+  trocarTipoBusca(tipo);
+  $('buscaNome').focus();
+});
+document.querySelectorAll('.busca-abas button').forEach((b) => b.addEventListener('click', () => trocarTipoBusca(b.dataset.busca)));
+$('buscaNome').addEventListener('input', buscarPorNome);
+$('buscaResultados').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-codigo]');
+  if (!b) return;
+  if (tipoBusca !== tipo) document.querySelector(`.abas button[data-tipo="${tipoBusca}"]`).click();
+  $('codigo').value = b.dataset.codigo;
+  consultarCodigo();
+  ultimoFoco = $('codigo');
+  fecharAjuda();
+});
+
+// ---------- Busca de classificação por nome ----------
+function buscarClasse() {
+  const palavras = semAcento($('buscaClasse').value.trim()).split(/\s+/).filter(Boolean);
+  const cod = codigoCompleto();
+  const filtrar = cod && $('soValidas').checked;
+  const peso = (item) => pesoClasse(item, cod);
+  // Sem texto: mostra as sugestões (★) para o código digitado; com texto, busca em todas
+  const achados = classes.map((c) => ({ c, v: cod ? vinculo(c, cod) : { valida: true } }))
+    .filter(({ c, v }) => {
+      if (filtrar && !v.valida) return false;
+      if (!palavras.length) return cod ? peso({ c, v }) > 0 : true;
+      const texto = semAcento(`${c.codigo} ${c.descricao} ${c.cstDescricao} ${c.tratamento || ''}`);
+      return palavras.every((p) => texto.includes(p) || texto.includes(radical(p)));
+    })
+    .sort((a, b) => peso(b) - peso(a) || a.c.codigo.localeCompare(b.c.codigo));
+  const LIMITE = 60;
+  let msg = achados.length ? `${achados.length} classificaç${achados.length > 1 ? 'ões' : 'ão'}` : 'Nenhuma classificação encontrada.';
+  if (achados.length > LIMITE) msg += `, mostrando as ${LIMITE} primeiras`;
+  if (achados.length) msg += !palavras.length && cod ? ` sugerida${achados.length > 1 ? 's' : ''} para ${tipo.toUpperCase()} ${cod}. Digite para buscar em todas.` : filtrar ? ` que valem para ${tipo.toUpperCase()} ${cod}.` : '.';
+  $('classeContagem').textContent = msg;
+  $('classeResultados').innerHTML = achados.slice(0, LIMITE).map((item) => {
+    const { c, v } = item;
+    const est = peso(item) ? `★ ${rotuloPeso(peso(item))}` : '';
+    const red = c.reducao.some((r) => r > 0) ? ` · redução ${c.reducao[0]}% CBS / ${c.reducao[1]}% IBS` : '';
+    const aviso = !c.suportado ? '<span class="cam ruim">Não calculada nesta versão</span>' : cod && !v.valida ? `<span class="cam ruim">Não vale para ${tipo.toUpperCase()} ${cod}</span>` : '';
+    return `<li><button type="button" data-classe="${c.codigo}"><span class="cod">${c.codigo}</span>${palavras.length ? destacar(c.descricao, palavras) : esc(c.descricao)}<span class="cam">CST ${c.cst} · ${esc(c.tratamento || c.cstDescricao)}${red}</span>${est ? `<span class="tag-est">${est}</span>` : ''}${aviso}</button></li>`;
+  }).join('');
+}
+$('abrirBuscaClasse').addEventListener('click', () => { abrirAjuda('classe'); buscarClasse(); $('buscaClasse').focus(); });
+$('buscaClasse').addEventListener('input', buscarClasse);
+$('classeResultados').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-classe]');
+  if (!b) return;
+  const escolhida = classes.find((x) => x.codigo === b.dataset.classe);
+  // se a chave estiver ligada e a escolhida não for válida, desliga a chave para poder selecioná-la
+  const cod = codigoCompleto();
+  if (escolhida && cod && $('soValidas').checked && !vinculo(escolhida, cod).valida) $('soValidas').checked = false;
+  renderClasses();
+  if (escolhida) { $('cst').value = escolhida.cst; renderClasses(); }
+  $('classTrib').value = b.dataset.classe;
+  mostrarClasse();
+  ultimoFoco = $('classTrib');
+  fecharAjuda();
+});
+
+// ---------- Busca de município por nome ----------
+let indiceMunicipios = null;
+function buscarMunicipio() {
+  if (!indiceMunicipios) {
+    indiceMunicipios = Object.entries(dados.ufs).flatMap(([uf, u]) => u.municipios.map(([c, n]) => ({ c, n, uf, nomeUf: u.nome, txt: semAcento(n) })));
+  }
+  const q = semAcento($('buscaMunicipio').value.trim()).replace(/\s+/g, ' ');
+  const lista = $('municipioResultados');
+  if (q.length < 2) { lista.innerHTML = ''; $('municipioContagem').textContent = 'Digite pelo menos 2 letras.'; return; }
+  // nome igual primeiro, depois os que começam com o texto, depois os que contêm
+  const nota = (m) => (m.txt === q ? 0 : m.txt.startsWith(q) ? 1 : 2);
+  const achados = indiceMunicipios.filter((m) => m.txt.includes(q))
+    .sort((a, b) => nota(a) - nota(b) || a.n.localeCompare(b.n, 'pt-BR') || a.uf.localeCompare(b.uf));
+  const LIMITE = 50;
+  $('municipioContagem').textContent = achados.length
+    ? `${achados.length} município${achados.length > 1 ? 's' : ''}${achados.length > LIMITE ? `, mostrando os ${LIMITE} primeiros.` : '.'}`
+    : 'Nenhum município encontrado.';
+  lista.innerHTML = achados.slice(0, LIMITE).map((m) =>
+    `<li><button type="button" data-uf="${m.uf}" data-municipio="${m.c}"><span class="cod">${m.uf}</span>${destacar(m.n, [q], true)}<span class="cam">${esc(m.nomeUf)} · código IBGE ${m.c}</span></button></li>`).join('');
+}
+$('abrirBuscaMunicipio').addEventListener('click', () => { abrirAjuda('municipio'); buscarMunicipio(); $('buscaMunicipio').focus(); });
+$('buscaMunicipio').addEventListener('input', buscarMunicipio);
+$('municipioResultados').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-municipio]');
+  if (!b) return;
+  $('uf').value = b.dataset.uf;
+  preencherMunicipios();
+  $('municipio').value = b.dataset.municipio;
+  mostrarLocal();
+  ultimoFoco = $('municipio');
+  fecharAjuda();
+});
+
+// ---------- Painel de ajuda ----------
+let ultimoFoco = null;
+function abrirAjuda(qual) {
+  ultimoFoco = document.activeElement;
+  document.querySelectorAll('[id^="ajuda-"]').forEach((el) => { el.hidden = el.id !== 'ajuda-' + qual; });
+  document.querySelectorAll('#painel h2').forEach((h) => h.removeAttribute('id'));
+  $('ajuda-' + qual).querySelector('h2').id = 'painelTitulo';
+  $('painel').classList.add('aberto');
+  $('painel').setAttribute('aria-hidden', 'false');
+  $('fundo').hidden = false;
+  $('fecharPainel').focus();
+}
+function fecharAjuda() {
+  $('painel').classList.remove('aberto');
+  $('painel').setAttribute('aria-hidden', 'true');
+  $('fundo').hidden = true;
+  if (ultimoFoco) ultimoFoco.focus();
+}
+document.querySelectorAll('.ajuda, .conceito').forEach((b) => b.addEventListener('click', () => abrirAjuda(b.dataset.ajuda)));
+$('fecharPainel').addEventListener('click', fecharAjuda);
+$('fundo').addEventListener('click', fecharAjuda);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('painel').classList.contains('aberto')) fecharAjuda(); });
+
+(async () => {
+  $('data').value = hoje();
+  try {
+    await carregar();
+    preencherUfs(); renderClasses(); verificarReferencia(); mostrarHistorico();
+    $('btn').disabled = false; $('btn').textContent = 'Calcular';
+  } catch (e) {
+    $('resultado').innerHTML = `<div class="caixa erro"><b>Não consegui carregar as tabelas.</b><br>${esc(e.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
